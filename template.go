@@ -49,6 +49,11 @@ func (s *XTemplate) Render(wr io.Writer, name string, data interface{}, cache bo
 		if err != nil {
 			return err
 		}
+
+		// cache template if requested
+		if cache {
+			s.cache[name] = tpl
+		}
 	}
 
 	buff := bytes.NewBuffer([]byte{})
