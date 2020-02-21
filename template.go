@@ -5,8 +5,10 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -21,37 +23,129 @@ type XTemplate struct {
 var fmRegex *regexp.Regexp
 
 func init() {
-	fmRegex = regexp.MustCompile(`(?s){{/\*\*\*(.*)\*\*\*/}}`)
+	fmRegex = regexp.MustCompile(`(?s){{/\*\*(.*)\*\*/}}`)
 }
 
 // New create new instance of XTemplate
-func New(folder string, fnMap template.FuncMap) *XTemplate {
+func New(folder string) *XTemplate {
 
 	xt := new(XTemplate)
 	xt.cache = make(map[string]*template.Template)
 	xt.folder = folder
-	xt.shared = template.New("").Funcs(fnMap)
+	xt.shared = template.New("")
 	return xt
 }
 
-// Render ...
-func (s *XTemplate) Render(wr io.Writer, name string, data interface{}, cache bool) error {
+// Delims sets the template delimiters to the specified strings,
+// must be called before templates are parsed
+func (s *XTemplate) Delims(left, right string) *XTemplate {
+	s.shared.Delims(left, right)
+	return s
+}
+
+// Funcs adds the elements of the argument map to the template's function map.
+// must be called before templates are parsed
+func (s *XTemplate) Funcs(funcMap template.FuncMap) *XTemplate {
+	s.shared.Funcs(funcMap)
+	return s
+}
+
+// Lookup returns the template with the given name in the cache
+func (s *XTemplate) Lookup(name string) *template.Template {
+	if _, found := s.cache[name]; !found {
+		return nil
+	}
+
+	return s.cache[name]
+}
+
+// ParseFile ...
+func (s *XTemplate) ParseFile(name string) error {
+	// parse template
+	tpl, err := s.getTemplate(name)
+	if err != nil {
+		return err
+	}
+
+	// cache template
+	s.cache[name] = tpl
+
+	return nil
+}
+
+// ParseDir parse all templates
+func (s *XTemplate) ParseDir(root, extension string, onlyPartials bool) error {
+	// parse partial templates (i.e files that are named _xxxxx.ext)
+	_, err := s.shared.ParseGlob("_*")
+	if err != nil {
+		return err
+	}
+
+	if onlyPartials {
+		return err
+	}
+
+	// find all template files
+	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		// skip dirs
+		if info == nil || info.IsDir() {
+			return nil
+		}
+
+		// check for extension
+		e := filepath.Ext(path)
+		if e != extension {
+			return nil
+		}
+
+		name := strings.TrimPrefix(path, root)
+
+		if strings.HasPrefix(name, "_") {
+			return nil
+		}
+
+		// parse template
+		tpl, err := s.getTemplate(name)
+		if err != nil {
+			return err
+		}
+
+		// cache template
+		s.cache[name] = tpl
+
+		return nil
+	})
+
+	return err
+}
+
+// Render parses a template then caches it. Will use cached version unless ignoreCache == true
+// if the template isnt found in the cache Render will attempt to locate it and parse
+func (s *XTemplate) Render(wr io.Writer, name string, data interface{}, ignoreCache bool) error {
 
 	var (
 		tpl   *template.Template
 		found bool
 		err   error
 	)
-	// check for template in cache
-	tpl, found = s.cache[name]
-	if !found {
+
+	if ignoreCache {
+		// parse template
 		tpl, err = s.getTemplate(name)
 		if err != nil {
 			return err
 		}
 
-		// cache template if requested
-		if cache {
+	} else {
+		tpl, found = s.cache[name]
+		if !found {
+			// parse template
+			tpl, err = s.getTemplate(name)
+			if err != nil {
+				return err
+			}
+
+			// cache template
 			s.cache[name] = tpl
 		}
 	}
@@ -97,14 +191,14 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	var tpl *template.Template
 
 	//
-	// sample frontmatter (note the '***')
+	// sample frontmatter (note the '**')
 	//
-	// {{/***
+	// {{/**
 	// 	master: base.html
 	// 	include:
 	// 	  - header.html
 	// 	  - footer.html
-	// ***/}}
+	// **/}}
 
 	// extract front matter
 	fm := new(frontMatter)
@@ -114,19 +208,17 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	}
 
 	if len(fm.Master) > 0 {
-		// get the master template if requested
+		// get the master template
 		master, err := s.getTemplate(fm.Master)
 		if err != nil {
 			return nil, err
 		}
 
 		// have the master template use this template as an overlay
-		_, err = master.Parse(string(fleContent))
+		tpl, err = master.Parse(string(fleContent))
 		if err != nil {
 			return nil, err
 		}
-
-		tpl = master
 	} else {
 		// create template
 		tpl, err = s.makeTemplate(name, fleContent)
@@ -136,12 +228,14 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	}
 
 	// parse includes if requested
-	for i := range fm.Include {
-		fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
-	}
-	_, err = tpl.ParseFiles(fm.Include...)
-	if err != nil {
-		return nil, err
+	if len(fm.Include) > 0 {
+		for i := range fm.Include {
+			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
+		}
+		_, err = tpl.ParseFiles(fm.Include...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return tpl, nil

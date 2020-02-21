@@ -1,0 +1,9 @@
+{{/**
+master: master.html
+include:
+ - extras.html
+**/}}
+{{define "body"}}
+with overlay body<br>
+    {{template "button" "submit"}}
+{{end}}
