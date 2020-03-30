@@ -91,3 +91,19 @@ func TestSubFolderFile(t *testing.T) {
 	assert.Equal(t, "dinma is 18\n", buff.String())
 	assert.Nil(t, xt.Lookup("plain.html"))
 }
+
+func TestFunctionSyntax(t *testing.T) {
+
+	xt := New("./samples")
+	data := map[string]interface{}{
+		"name": "dinma", "age": 18,
+	}
+
+	buff := bytes.NewBufferString("")
+	if err := xt.Render(buff, "functions.html", data, true); err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(t, "dinma is 18\nmy name is dinma\n\nmy name is dinma", buff.String())
+}

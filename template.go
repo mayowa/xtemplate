@@ -21,9 +21,13 @@ type XTemplate struct {
 }
 
 var fmRegex *regexp.Regexp
+var lneRe *regexp.Regexp
+var expRe *regexp.Regexp
 
 func init() {
 	fmRegex = regexp.MustCompile(`(?s){{/\*\*(.*)\*\*/}}`)
+	lneRe = regexp.MustCompile(`{{.+}}`)
+	expRe = regexp.MustCompile(`([a-zA-Z]+[0-9]*)\((.+)\)`)
 }
 
 // New create new instance of XTemplate
@@ -176,6 +180,10 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		return nil, err
 	}
 
+	// translate function syntax sugar
+	// fn(arg1, arg2,...) --> fn arg1 arg2 ...
+	fleContent = translateFuncSyntax(fleContent)
+
 	// check if template contains frontmatter
 	match := fmRegex.FindSubmatch(fleContent)
 	if len(match) == 0 {
@@ -248,4 +256,20 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 	}
 
 	return tpl.New(name).Parse(string(content))
+}
+
+// translateFuncSyntax
+// fn(arg1, arg2,...) --> fn arg1 arg2 ...
+func translateFuncSyntax(src []byte) []byte {
+	retv := lneRe.ReplaceAllFunc([]byte(src), func(b []byte) []byte {
+		return expRe.ReplaceAllFunc([]byte(b), func(b2 []byte) []byte {
+			rv := bytes.Replace(
+				bytes.Replace(b2, []byte(","), []byte(""), -1),
+				[]byte("("), []byte(" "), 1,
+			)
+			return bytes.Replace(rv, []byte(")"), []byte(""), 1)
+		})
+	})
+
+	return retv
 }
