@@ -72,7 +72,11 @@ func TestIncludes(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "master \nwith overlay body<br>\n\na button submit\n\n\n", buff.String())
+	assert.Equal(
+		t,
+		"master \nwith overlay body<br>\n    \na button submit\n\n\n",
+		buff.String(),
+	)
 }
 
 func TestSubFolderFile(t *testing.T) {
