@@ -1,4 +1,4 @@
-package template
+package xtemplate
 
 import (
 	"bytes"
@@ -74,7 +74,7 @@ func TestIncludes(t *testing.T) {
 
 	assert.Equal(
 		t,
-		"master \nwith overlay body<br>\n    \na button submit\n\n\n",
+		"master \nwith overlay body<br>\n\na button submit\n\n\n",
 		buff.String(),
 	)
 }

@@ -1,4 +1,4 @@
-package template
+package xtemplate
 
 import (
 	"bytes"
@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"gopkg.in/yaml.v2"
 )
 
 // XTemplate ...
@@ -23,11 +21,16 @@ type XTemplate struct {
 var fmRegex *regexp.Regexp
 var lneRe *regexp.Regexp
 var expRe *regexp.Regexp
+var actRe *regexp.Regexp
 
 func init() {
 	fmRegex = regexp.MustCompile(`(?s){{/\*\*(.*)\*\*/}}`)
-	lneRe = regexp.MustCompile(`{{.+}}`)
+	// {{ ...  }}
+	lneRe = regexp.MustCompile(`{{.+?}}`)
+	// fnMix("index.html", 2)
 	expRe = regexp.MustCompile(`([a-zA-Z]+[0-9]*)\((.+)\)`)
+	// {{ extend "index.html" }}
+	actRe = regexp.MustCompile(`[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*`)
 }
 
 // New create new instance of XTemplate
@@ -180,13 +183,16 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		return nil, err
 	}
 
+	// extract front matter
+	fm := new(frontMatter)
+	fm, fleContent = extractFrontMatter(actRe, fleContent)
+
 	// translate function syntax sugar
 	// fn(arg1, arg2,...) --> fn arg1 arg2 ...
 	fleContent = translateFuncSyntax(fleContent)
 
-	// check if template contains frontmatter
-	match := fmRegex.FindSubmatch(fleContent)
-	if len(match) == 0 {
+	// if template doesn't contains frontmatter
+	if fm == nil {
 		// this template doesn't contain frontmatter, create template and return
 		tpl, err := s.makeTemplate(name, fleContent)
 		if err != nil {
@@ -197,23 +203,6 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	}
 
 	var tpl *template.Template
-
-	//
-	// sample frontmatter (note the '**')
-	//
-	// {{/**
-	// 	master: base.html
-	// 	include:
-	// 	  - header.html
-	// 	  - footer.html
-	// **/}}
-
-	// extract front matter
-	fm := new(frontMatter)
-	err = yaml.Unmarshal(match[1], fm)
-	if err != nil {
-		return nil, err
-	}
 
 	if len(fm.Master) > 0 {
 		// get the master template
@@ -272,4 +261,30 @@ func translateFuncSyntax(src []byte) []byte {
 	})
 
 	return retv
+}
+
+func extractFrontMatter(re *regexp.Regexp, src []byte) (*frontMatter, []byte) {
+	fm := frontMatter{}
+	retv := re.ReplaceAllFunc(src, func(b []byte) []byte {
+		parts := re.FindSubmatch(b)
+
+		if len(parts) < 3 {
+			return b
+		}
+		action := string(bytes.TrimSpace(parts[1]))
+
+		switch action {
+		case "extend":
+			fm.Master = string(parts[2])
+			return []byte("")
+
+		case "include":
+			fm.Include = append(fm.Include, string(parts[2]))
+			return []byte("")
+		}
+
+		return b
+	})
+
+	return &fm, retv
 }
