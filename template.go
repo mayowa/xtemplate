@@ -2,6 +2,7 @@ package xtemplate
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -18,19 +19,20 @@ type XTemplate struct {
 	cache  map[string]*template.Template
 }
 
-var fmRegex *regexp.Regexp
 var lneRe *regexp.Regexp
 var expRe *regexp.Regexp
 var actRe *regexp.Regexp
+var tplRe *regexp.Regexp
 
 func init() {
-	fmRegex = regexp.MustCompile(`(?s){{/\*\*(.*)\*\*/}}`)
 	// {{ ...  }}
 	lneRe = regexp.MustCompile(`{{.+?}}`)
 	// fnMix("index.html", 2)
 	expRe = regexp.MustCompile(`([a-zA-Z]+[0-9]*)\((.+)\)`)
 	// {{ extend "index.html" }}
 	actRe = regexp.MustCompile(`[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*`)
+	// {{ template button(123) }}
+	tplRe = regexp.MustCompile(`{{[ \t]*template ([a-zA-Z0-9\-_]+) ?\(?([^\}]+?)\)?[ \t]*}}`)
 }
 
 // New create new instance of XTemplate
@@ -187,6 +189,9 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	fm := new(frontMatter)
 	fm, fleContent = extractFrontMatter(actRe, fleContent)
 
+	// handle {{ template }}
+	fleContent = convertTemplateSyntax(tplRe, fleContent)
+
 	// translate function syntax sugar
 	// fn(arg1, arg2,...) --> fn arg1 arg2 ...
 	fleContent = translateFuncSyntax(fleContent)
@@ -247,6 +252,25 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 	return tpl.New(name).Parse(string(content))
 }
 
+// convertTemplateSyntax
+// {{ template button("args") }} --> {{ template "button" "args" }}
+func convertTemplateSyntax(re *regexp.Regexp, src []byte) []byte {
+	retv := re.ReplaceAllFunc(src, func(b []byte) []byte {
+		part := re.FindSubmatch(b)
+
+		retStr := ""
+		if len(part) == 2 {
+			retStr = fmt.Sprintf("{{ template \"%s\" }}", string(part[1]))
+		} else if len(part) == 3 {
+			arg := bytes.TrimSpace(bytes.Replace(part[2], []byte(","), []byte(" "), -1))
+			retStr = fmt.Sprintf("{{ template \"%s\" %s }}", string(part[1]), string(arg))
+		}
+		return []byte(retStr)
+	})
+
+	return retv
+}
+
 // translateFuncSyntax
 // fn(arg1, arg2,...) --> fn arg1 arg2 ...
 func translateFuncSyntax(src []byte) []byte {
@@ -274,7 +298,7 @@ func extractFrontMatter(re *regexp.Regexp, src []byte) (*frontMatter, []byte) {
 		action := string(bytes.TrimSpace(parts[1]))
 
 		switch action {
-		case "extend":
+		case "extends":
 			fm.Master = string(parts[2])
 			return []byte("")
 

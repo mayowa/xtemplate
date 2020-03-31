@@ -1,7 +1,7 @@
-{{extend "master.html"}}
+{{extends "master.html"}}
 {{include "extras.html"}}
 
 {{define "body"}}
 with overlay body<br>
-{{template "button" "submit"}}
+{{ template button("submit") }}
 {{end}}
