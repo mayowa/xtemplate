@@ -42,6 +42,15 @@ func New(folder string) *XTemplate {
 	xt.cache = make(map[string]*template.Template)
 	xt.folder = folder
 	xt.shared = template.New("")
+
+	funcs := template.FuncMap{
+		"title": capitalize,
+		"lower": lower,
+		"upper": upper,
+		"json":  marshalJSON,
+	}
+
+	xt.shared.Funcs(funcs)
 	return xt
 }
 
@@ -171,6 +180,65 @@ func (s *XTemplate) Render(wr io.Writer, name string, data interface{}, ignoreCa
 	return nil
 }
 
+// RenderString renders a template from a string. supports the extend and include actions
+func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error) {
+
+	var (
+		tpl *template.Template
+		err error
+	)
+
+	fleContent := []byte(tplStr)
+	var fm *frontMatter
+	fleContent, fm, err = preProccess(fleContent)
+	if err != nil {
+		return "", err
+	}
+
+	if fm == nil {
+		tpl, err = s.shared.Clone()
+		if err != nil {
+			return "", err
+		}
+
+		_, err = tpl.Parse(string(fleContent))
+		if err != nil {
+			return "", err
+		}
+	} else if fm != nil && len(fm.Master) > 0 {
+		// get the master template
+		master, err := s.getTemplate(fm.Master)
+		if err != nil {
+			return "", err
+		}
+
+		// have the master template use this template as an overlay
+		tpl, err = master.Parse(string(fleContent))
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if fm != nil && len(fm.Include) > 0 {
+		for i := range fm.Include {
+			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
+		}
+		_, err = tpl.ParseFiles(fm.Include...)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	buff := bytes.NewBufferString("")
+	if err = tpl.Execute(buff, data); err != nil {
+		return "", err
+	}
+
+	retv := buff.String()
+
+	return retv, nil
+}
+
 type frontMatter struct {
 	Master  string   `yaml:"master"`
 	Include []string `yaml:"include"`
@@ -185,16 +253,11 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		return nil, err
 	}
 
-	// extract front matter
-	fm := new(frontMatter)
-	fm, fleContent = extractFrontMatter(actRe, fleContent)
-
-	// handle {{ template }}
-	fleContent = convertTemplateSyntax(tplRe, fleContent)
-
-	// translate function syntax sugar
-	// fn(arg1, arg2,...) --> fn arg1 arg2 ...
-	fleContent = translateFuncSyntax(fleContent)
+	var fm *frontMatter
+	fleContent, fm, err = preProccess(fleContent)
+	if err != nil {
+		return nil, err
+	}
 
 	// if template doesn't contains frontmatter
 	if fm == nil {
@@ -252,6 +315,22 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 	return tpl.New(name).Parse(string(content))
 }
 
+func preProccess(fleContent []byte) ([]byte, *frontMatter, error) {
+
+	// extract front matter
+	var fm *frontMatter
+	fm, fleContent = extractFrontMatter(actRe, fleContent)
+
+	// handle {{ template }}
+	fleContent = convertTemplateSyntax(tplRe, fleContent)
+
+	// translate function syntax sugar
+	// fn(arg1, arg2,...) --> fn arg1 arg2 ...
+	fleContent = translateFuncSyntax(fleContent)
+
+	return fleContent, fm, nil
+}
+
 // convertTemplateSyntax
 // {{ template button("args") }} --> {{ template "button" "args" }}
 func convertTemplateSyntax(re *regexp.Regexp, src []byte) []byte {
@@ -288,7 +367,7 @@ func translateFuncSyntax(src []byte) []byte {
 }
 
 func extractFrontMatter(re *regexp.Regexp, src []byte) (*frontMatter, []byte) {
-	fm := frontMatter{}
+	fm := &frontMatter{}
 	retv := re.ReplaceAllFunc(src, func(b []byte) []byte {
 		parts := re.FindSubmatch(b)
 
@@ -310,5 +389,9 @@ func extractFrontMatter(re *regexp.Regexp, src []byte) (*frontMatter, []byte) {
 		return b
 	})
 
-	return &fm, retv
+	if len(fm.Master) == 0 && len(fm.Include) == 0 {
+		fm = nil
+	}
+
+	return fm, retv
 }

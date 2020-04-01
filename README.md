@@ -47,7 +47,3 @@ rendering child.html will output
 ```
 Hello from child footer
 ```
-
-{{ include "file.html" }}
-
-and functions can be written "normally"

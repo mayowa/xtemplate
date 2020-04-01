@@ -111,3 +111,51 @@ func TestFunctionSyntax(t *testing.T) {
 
 	assert.Equal(t, "dinma is 18\nmy name is dinma\n\nmy name is dinma", buff.String())
 }
+
+func TestFunctions(t *testing.T) {
+
+	xt := New("./samples")
+	data := map[string]interface{}{
+		"name": "dinma", "age": 18,
+	}
+	tpl := `hello world`
+	retv, err := xt.RenderString(tpl, data)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Equal(t, "hello world", retv)
+
+	tpl = `{{ upper("hello world") }}`
+	retv, err = xt.RenderString(tpl, data)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(t, "HELLO WORLD", retv)
+}
+
+func TestRenderString(t *testing.T) {
+
+	xt := New("./samples")
+	data := map[string]interface{}{
+		"name": "dinma", "age": 18,
+	}
+	tpl := `
+	{{extends "master.html"}}
+	{{include "extras.html"}}
+
+	{{define "body"}}
+	with overlay body<br>
+	{{ template button("submit") }}
+	{{end}}
+	`
+	retv, err := xt.RenderString(tpl, data)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Equal(t, "master \n\twith overlay body<br>\n\t\na button submit\n\n\t\n\na footer\n", retv)
+
+}
