@@ -1,8 +1,10 @@
+[![GoDoc](http://godoc.org/github.com/mayowa/xtemplate?status.svg)](http://godoc.org/github.com/mayowa/xtemplate)
+
 # xtemplate
 a wrapper around text/template
 inspired by:
- https://github.com/dannyvankooten/extemplate
- https://github.com/tyler-sommer/stick
+* https://github.com/dannyvankooten/extemplate
+* https://github.com/tyler-sommer/stick
 
 ## Overview
 xtemplate wraps text/template to provide:
@@ -11,8 +13,6 @@ xtemplate wraps text/template to provide:
 * syntax sugar on function/method calls (eg fn(arg1, arg2) instead of fn arg1 arg2)
 * syntax sugar on template calls
 
-### extends
-makes file based inheritance possible
 
 ```html
 <!-- master.html -->
