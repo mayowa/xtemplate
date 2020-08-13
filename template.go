@@ -356,7 +356,7 @@ func translateFuncSyntax(src []byte) []byte {
 	retv := lneRe.ReplaceAllFunc([]byte(src), func(b []byte) []byte {
 		return expRe.ReplaceAllFunc([]byte(b), func(b2 []byte) []byte {
 			rv := bytes.Replace(
-				bytes.Replace(b2, []byte(","), []byte(""), -1),
+				bytes.Replace(b2, []byte(","), []byte(" "), -1),
 				[]byte("("), []byte(" "), 1,
 			)
 			return bytes.Replace(rv, []byte(")"), []byte(""), 1)

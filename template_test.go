@@ -109,7 +109,7 @@ func TestFunctionSyntax(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "dinma is 18\nmy name is dinma\n\nmy name is dinma", buff.String())
+	assert.Equal(t, "dinma is 18\nmy name is dinma\n\nmy name is dinma\n\ndinma is my name", buff.String())
 }
 
 func TestFunctions(t *testing.T) {
