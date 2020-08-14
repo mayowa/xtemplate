@@ -74,7 +74,7 @@ func TestIncludes(t *testing.T) {
 
 	assert.Equal(
 		t,
-		"master \nwith overlay body<br>\n\na button submit\n\n\n\na footer\n",
+		"master \nwith overlay body<br>\n\na BUTTON submit\n\n\n\na footer\n",
 		buff.String(),
 	)
 }
@@ -156,6 +156,6 @@ func TestRenderString(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	assert.Equal(t, "master \n\twith overlay body<br>\n\t\na button submit\n\n\t\n\na footer\n", retv)
+	assert.Equal(t, "master \n\twith overlay body<br>\n\t\na BUTTON submit\n\n\t\n\na footer\n", retv)
 
 }

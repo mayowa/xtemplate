@@ -223,7 +223,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 		for i := range fm.Include {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
 		}
-		_, err = tpl.ParseFiles(fm.Include...)
+		_, err = parseFiles(tpl, fm.Include...)
 		if err != nil {
 			return "", err
 		}
@@ -296,8 +296,9 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	if len(fm.Include) > 0 {
 		for i := range fm.Include {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
+
 		}
-		_, err = tpl.ParseFiles(fm.Include...)
+		_, err = parseFiles(tpl, fm.Include...)
 		if err != nil {
 			return nil, err
 		}
@@ -313,6 +314,39 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 	}
 
 	return tpl.New(name).Parse(string(content))
+}
+
+func parseFiles(t *template.Template, filenames ...string) (*template.Template, error) {
+
+	for _, filename := range filenames {
+		b, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		prd, _, err := preProccess(b)
+		if err != nil {
+			return nil, err
+		}
+
+		s := string(prd)
+		name := filepath.Base(filename)
+
+		var tmpl *template.Template
+		if t == nil {
+			t = template.New(name)
+		}
+		if name == t.Name() {
+			tmpl = t
+		} else {
+			tmpl = t.New(name)
+		}
+		_, err = tmpl.Parse(s)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return t, nil
 }
 
 func preProccess(fleContent []byte) ([]byte, *frontMatter, error) {
