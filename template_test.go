@@ -74,7 +74,7 @@ func TestIncludes(t *testing.T) {
 
 	assert.Equal(
 		t,
-		"master \nwith overlay body<br>\n\na BUTTON submit\n\n\n\na footer\n",
+		"master \nwith overlay body<br>\n\na BUTTON submit\n\n\na BUTTON submit2\n\n\n\n* A\n\n* B\n\n\n\n\nHello mayowa, age: 18\n\n\n\n\na footer\n",
 		buff.String(),
 	)
 }

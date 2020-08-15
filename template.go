@@ -32,7 +32,7 @@ func init() {
 	// {{ extend "index.html" }}
 	actRe = regexp.MustCompile(`[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*`)
 	// {{ template button(123) }}
-	tplRe = regexp.MustCompile(`{{[ \t]*template ([a-zA-Z0-9\-_]+) ?\(?([^\}]+?)\)?[ \t]*}}`)
+	tplRe = regexp.MustCompile(`{{\s*(macro|template)\s*([a-zA-Z0-9\-_]+)\s*\((.*?)\)\s*}}`)
 }
 
 // New create new instance of XTemplate
@@ -44,10 +44,12 @@ func New(folder string) *XTemplate {
 	xt.shared = template.New("")
 
 	funcs := template.FuncMap{
-		"title": capitalize,
-		"lower": lower,
-		"upper": upper,
-		"json":  marshalJSON,
+		"args":   args,
+		"kwargs": kwargs,
+		"title":  capitalize,
+		"lower":  lower,
+		"upper":  upper,
+		"json":   marshalJSON,
 	}
 
 	xt.shared.Funcs(funcs)
@@ -367,16 +369,28 @@ func preProccess(fleContent []byte) ([]byte, *frontMatter, error) {
 
 // convertTemplateSyntax
 // {{ template button("args") }} --> {{ template "button" "args" }}
+// {{ macro button("args") }} --> {{ template "button" "args" }}
+// {{ macro button("a",1,2) }} --> {{ template "button" args "a" 1 2 }}
+// {{ macro button("a":1,"b":22) }} --> {{ template "button" kwargs "a" 1 "b" 22 }}
 func convertTemplateSyntax(re *regexp.Regexp, src []byte) []byte {
 	retv := re.ReplaceAllFunc(src, func(b []byte) []byte {
 		part := re.FindSubmatch(b)
 
 		retStr := ""
-		if len(part) == 2 {
-			retStr = fmt.Sprintf("{{ template \"%s\" }}", string(part[1]))
-		} else if len(part) == 3 {
-			arg := bytes.TrimSpace(bytes.Replace(part[2], []byte(","), []byte(" "), -1))
-			retStr = fmt.Sprintf("{{ template \"%s\" %s }}", string(part[1]), string(arg))
+		if len(part) == 3 {
+			retStr = fmt.Sprintf("{{ template \"%s\" }}", string(part[2]))
+		} else if len(part) == 4 {
+			if bytes.Count(part[3], []byte(":")) > 0 {
+				arg := bytes.TrimSpace(bytes.Replace(part[3], []byte(":"), []byte(" "), -1))
+				arg = bytes.TrimSpace(bytes.Replace(arg, []byte(","), []byte(" "), -1))
+				retStr = fmt.Sprintf("{{ template \"%s\" kwargs %s }}", string(part[2]), string(arg))
+			} else if bytes.Count(part[3], []byte(",")) > 0 {
+				arg := bytes.TrimSpace(bytes.Replace(part[3], []byte(","), []byte(" "), -1))
+				retStr = fmt.Sprintf("{{ template \"%s\" args %s }}", string(part[2]), string(arg))
+			} else {
+				arg := part[3]
+				retStr = fmt.Sprintf("{{ template \"%s\" %s }}", string(part[2]), string(arg))
+			}
 		}
 		return []byte(retStr)
 	})

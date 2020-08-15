@@ -2,6 +2,17 @@
 a {{ upper("button") }} {{ . }}
 {{end}}
 
+{{define "list"}}
+{{range . }}
+* {{ . }}
+{{end}}
+{{end}}
+
+<!-- @pram <map> : name, age -->
+{{define "hello"}}
+Hello {{ .name }}, age: {{.age}}
+{{end}}
+
 {{define "footer"}}
 a footer
 {{end}}

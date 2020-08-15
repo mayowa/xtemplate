@@ -2,6 +2,7 @@ package xtemplate
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"reflect"
 	"strings"
@@ -35,6 +36,19 @@ func getDefault(val, defa interface{}) interface{} {
 	}
 
 	return val
+}
+
+func args(val ...interface{}) interface{} {
+	return val
+}
+
+func kwargs(arg ...interface{}) map[string]interface{} {
+	m := map[string]interface{}{}
+	for i := 0; i < len(arg); i += 2 {
+		m[fmt.Sprintf("%v", arg[i])] = arg[i+1]
+	}
+
+	return m
 }
 
 // formatDate formate time.Time using pkg time layout strings
