@@ -371,7 +371,7 @@ func preProccess(fleContent []byte) ([]byte, *frontMatter, error) {
 // {{ template button("args") }} --> {{ template "button" "args" }}
 // {{ macro button("args") }} --> {{ template "button" "args" }}
 // {{ macro button("a",1,2) }} --> {{ template "button" args "a" 1 2 }}
-// {{ macro button("a":1,"b":22) }} --> {{ template "button" kwargs "a" 1 "b" 22 }}
+// {{ macro button("a"::1,"b"::22) }} --> {{ template "button" kwargs "a" 1 "b" 22 }}
 func convertTemplateSyntax(re *regexp.Regexp, src []byte) []byte {
 	retv := re.ReplaceAllFunc(src, func(b []byte) []byte {
 		part := re.FindSubmatch(b)
@@ -380,8 +380,8 @@ func convertTemplateSyntax(re *regexp.Regexp, src []byte) []byte {
 		if len(part) == 3 {
 			retStr = fmt.Sprintf("{{ template \"%s\" }}", string(part[2]))
 		} else if len(part) == 4 {
-			if bytes.Count(part[3], []byte(":")) > 0 {
-				arg := bytes.TrimSpace(bytes.Replace(part[3], []byte(":"), []byte(" "), -1))
+			if bytes.Count(part[3], []byte("::")) > 0 {
+				arg := bytes.TrimSpace(bytes.Replace(part[3], []byte("::"), []byte(" "), -1))
 				arg = bytes.TrimSpace(bytes.Replace(arg, []byte(","), []byte(" "), -1))
 				retStr = fmt.Sprintf("{{ template \"%s\" kwargs %s }}", string(part[2]), string(arg))
 			} else if bytes.Count(part[3], []byte(",")) > 0 {
