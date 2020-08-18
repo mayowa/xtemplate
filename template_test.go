@@ -74,7 +74,7 @@ func TestIncludes(t *testing.T) {
 
 	assert.Equal(
 		t,
-		"master \nwith overlay body<br>\n\na BUTTON submit\n\n\na BUTTON submit2\n\n\n\n* A\n\n* B\n\n\n\n\nHello mayowa, age: 18\n\n\n\n\na footer\n",
+		"master \nwith overlay body<br>\n\na BUTTON submit2\n\n\n\n* A\n\n* B\n\n\n\nHello mayowa, age: 18\n\n\n<div  class=\"red\">\n    <p>Hello</p>\n    <p>World</p>\n</div>\n\na footer\n",
 		buff.String(),
 	)
 }
@@ -157,5 +157,36 @@ func TestRenderString(t *testing.T) {
 		return
 	}
 	assert.Equal(t, "master \n\twith overlay body<br>\n\t\na BUTTON submit\n\n\t\n\na footer\n", retv)
+
+}
+
+func TestTranslateTags(t *testing.T) {
+
+	src := []byte(`
+	<tag type="input" class="red sm:red" x-data="{'a':1}"></tag>
+	`)
+	retv := string(translateTags(src))
+
+	exp := "\n\t\n\t\t{{ $jputeHFozdHtml := `` }}\n\t\t{{ $jputeHFozdAttr := kwargs [\"class\" `red sm:red` \"x-data\" `{'a':1}`] }}\n\t\ttag \"input\" $jputeHFozdAttr $jputeHFozdHtml\n\t\t\n\t"
+	assert.Equal(t, exp, retv)
+	// assert.Greater(t, len(retv), 5)
+
+}
+
+func TestTagsOnly(t *testing.T) {
+
+	xt := New("./samples")
+	data := map[string]interface{}{
+		"name": "dinma", "age": 18,
+	}
+	tpl := `
+	<tag type="text-field" class="red sm:red" x-data="{'a':1}"></tag>
+	`
+	retv, err := xt.RenderString(tpl, data)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Equal(t, "\n\t\n\t\t\n\t\t\n\t\t<text-field  class=\"red sm:red\" x-data=\"{'a':1}\"></text-field>\n\t\t\n\t", retv)
 
 }

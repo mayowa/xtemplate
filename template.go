@@ -10,6 +10,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/valyala/fasttemplate"
+	"golang.org/x/net/html"
 )
 
 // XTemplate ...
@@ -23,6 +27,9 @@ var lneRe *regexp.Regexp
 var expRe *regexp.Regexp
 var actRe *regexp.Regexp
 var tplRe *regexp.Regexp
+var mapRe *regexp.Regexp
+var atrRe *regexp.Regexp
+var tagRe *regexp.Regexp
 
 func init() {
 	// {{ ...  }}
@@ -33,6 +40,12 @@ func init() {
 	actRe = regexp.MustCompile(`[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*`)
 	// {{ template button(123) }}
 	tplRe = regexp.MustCompile(`{{\s*(macro|template)\s*([a-zA-Z0-9\-_]+)\s*\((.*?)\)\s*}}`)
+	// {"attri":v, "attr2":"val2"}
+	mapRe = regexp.MustCompile(`(?s)[\,|\(|\s]\{\s?(.+)\s?\}`)
+	// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
+	atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
+	// <tag (attr)>(content)</tag>
+	tagRe = regexp.MustCompile(`(?s)<tag([\s\S]+?)>(.+)?</tag>`)
 }
 
 // New create new instance of XTemplate
@@ -50,6 +63,7 @@ func New(folder string) *XTemplate {
 		"lower":  lower,
 		"upper":  upper,
 		"json":   marshalJSON,
+		"tag":    tags,
 	}
 
 	xt.shared.Funcs(funcs)
@@ -357,6 +371,9 @@ func preProccess(fleContent []byte) ([]byte, *frontMatter, error) {
 	var fm *frontMatter
 	fm, fleContent = extractFrontMatter(actRe, fleContent)
 
+	// <tag> --> tag .type .attr . content
+	fleContent = translateTags(fleContent)
+
 	// handle {{ template }}
 	fleContent = convertTemplateSyntax(tplRe, fleContent)
 
@@ -364,6 +381,7 @@ func preProccess(fleContent []byte) ([]byte, *frontMatter, error) {
 	// fn(arg1, arg2,...) --> fn arg1 arg2 ...
 	fleContent = translateFuncSyntax(fleContent)
 
+	// fmt.Println("\n>>>>\n", string(fleContent), "\n>>>>")
 	return fleContent, fm, nil
 }
 
@@ -409,6 +427,57 @@ func translateFuncSyntax(src []byte) []byte {
 			)
 			return bytes.Replace(rv, []byte(")"), []byte(""), 1)
 		})
+	})
+
+	return retv
+}
+
+// translateTags
+// <tag type="input" class="abc" disabled><p>hello</p></tag> --> tag .type .attributes .content
+func translateTags(src []byte) []byte {
+	// match <tag></tag>
+	retv := tagRe.ReplaceAllFunc([]byte(src), func(b []byte) []byte {
+		doc, err := goquery.NewDocumentFromReader(bytes.NewReader(b))
+		if err != nil {
+			return b
+		}
+
+		tag := doc.Find("tag")
+		tagType := tag.AttrOr("type", "div")
+		tagAttr := tag.Nodes[0].Attr
+		tagHTML, err := tag.Html()
+		if err != nil {
+			return b
+		}
+		tagHTML = html.UnescapeString(tagHTML)
+
+		// fmt.Println("tagHTML --->>", tagHTML)
+
+		varName := randString(10)
+		attrList := []string{}
+		for _, i := range tagAttr {
+			if (i.Key) == "type" {
+				continue
+			}
+
+			attrList = append(attrList,
+				fmt.Sprintf(`"%s"`, i.Key),
+				fmt.Sprintf("`%s`", i.Val),
+			)
+		}
+		tpl := `{{- $[var]Html := [html] }}
+{{ $[var]Attr := kwargs [attr] }}
+{{ tag "[type]" $[var]Attr $[var]Html -}}
+`
+		t := fasttemplate.New(tpl, "[", "]")
+		retv := t.ExecuteString(map[string]interface{}{
+			"var":  varName,
+			"type": tagType,
+			"html": fmt.Sprintf("`%s`", tagHTML),
+			"attr": strings.Join(attrList, " "),
+		})
+
+		return []byte(retv)
 	})
 
 	return retv
