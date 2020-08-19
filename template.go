@@ -46,7 +46,7 @@ func init() {
 	// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
 	atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
 	// <tag (attr)>(content)</tag>
-	tagRe = regexp.MustCompile(`(?s)<tag([\s\S]+?)>(.+)?</tag>`)
+	tagRe = regexp.MustCompile(`<tag([\s\S]+?)>(.+)?</tag>`)
 }
 
 // New create new instance of XTemplate
@@ -64,7 +64,7 @@ func New(folder string) *XTemplate {
 		"lower":  lower,
 		"upper":  upper,
 		"json":   marshalJSON,
-		// "tag":    tags,
+		"tag":    tags,
 	}
 	xt.funcs = funcs
 
@@ -484,9 +484,9 @@ func translateTags(src []byte) []byte {
 				fmt.Sprintf("`%s`", i.Val),
 			)
 		}
-		tpl := `{{- $[var]Html := [html] }}
+		tpl := `{{ $[var]Html := [html] }}
 {{ $[var]Attr := kwargs [attr] }}
-{{ tag "[type]" $[var]Attr $[var]Html -}}
+{{ tag "[type]" $[var]Attr $[var]Html }}
 `
 		t := fasttemplate.New(tpl, "[", "]")
 		retv := t.ExecuteString(map[string]interface{}{

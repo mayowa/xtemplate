@@ -164,12 +164,13 @@ func TestTranslateTags(t *testing.T) {
 
 	src := []byte(`
 	<tag type="input" class="red sm:red" x-data="{'a':1}"></tag>
+	<tag type="input" class="yello sm:red" x-data="{'a':1}"></tag>
 	`)
 	retv := string(translateTags(src))
 
-	// exp := "\n\t\n\t\t{{ $jputeHFozdHtml := `` }}\n\t\t{{ $jputeHFozdAttr := kwargs [\"class\" `red sm:red` \"x-data\" `{'a':1}`] }}\n\t\ttag \"input\" $jputeHFozdAttr $jputeHFozdHtml\n\t\t\n\t"
-	// assert.Equal(t, exp, retv)
-	assert.Greater(t, len(retv), 5)
+	exp := "\n\t\n\t\t{{ $jputeHFozdHtml := `` }}\n\t\t{{ $jputeHFozdAttr := kwargs [\"class\" `red sm:red` \"x-data\" `{'a':1}`] }}\n\t\ttag \"input\" $jputeHFozdAttr $jputeHFozdHtml\n\t\t\n\t"
+	assert.Equal(t, exp, retv)
+	// assert.Greater(t, len(retv), 5)
 
 }
 
@@ -181,12 +182,13 @@ func TestTagsOnly(t *testing.T) {
 	}
 	tpl := `
 	<tag type="text-field" class="red sm:red" x-data="{'a':1}"></tag>
+	<tag type="text-field" class="red sm:yello" x-data="{'b':2}"></tag>
 	`
 	retv, err := xt.RenderString(tpl, data)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	assert.Equal(t, "\n\n<text-field  class=\"red sm:red\" x-data=\"{'a':1}\"></text-field>", retv)
+	assert.Equal(t, "\n\t\n\n<text-field  class=\"red sm:red\" x-data=\"{'a':1}\"></text-field>\n\n\t\n\n<text-field  class=\"red sm:yello\" x-data=\"{'b':2}\"></text-field>\n\n\t", retv)
 
 }
