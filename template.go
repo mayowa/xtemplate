@@ -21,6 +21,7 @@ type XTemplate struct {
 	folder string
 	shared *template.Template
 	cache  map[string]*template.Template
+	funcs  template.FuncMap
 }
 
 var lneRe *regexp.Regexp
@@ -63,10 +64,11 @@ func New(folder string) *XTemplate {
 		"lower":  lower,
 		"upper":  upper,
 		"json":   marshalJSON,
-		// "tag":    tags,
+		"tag":    tags,
 	}
+	xt.funcs = funcs
 
-	xt.shared.Funcs(funcs)
+	xt.shared.Funcs(xt.funcs)
 	return xt
 }
 
@@ -80,7 +82,18 @@ func (s *XTemplate) Delims(left, right string) *XTemplate {
 // Funcs adds the elements of the argument map to the template's function map.
 // must be called before templates are parsed
 func (s *XTemplate) Funcs(funcMap template.FuncMap) *XTemplate {
-	s.shared.Funcs(funcMap)
+	for k, v := range funcMap {
+		s.funcs[k] = v
+	}
+	s.shared.Funcs(s.funcs)
+	return s
+}
+
+// AddFunc add a function the template's function map.
+// must be called before templates are parsed
+func (s *XTemplate) AddFunc(name string, fn interface{}) *XTemplate {
+	s.funcs[name] = fn
+	s.shared.Funcs(s.funcs)
 	return s
 }
 
