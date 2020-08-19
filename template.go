@@ -64,7 +64,7 @@ func New(folder string) *XTemplate {
 		"lower":  lower,
 		"upper":  upper,
 		"json":   marshalJSON,
-		"tag":    tags,
+		// "tag":    tags,
 	}
 	xt.funcs = funcs
 
@@ -95,6 +95,12 @@ func (s *XTemplate) AddFunc(name string, fn interface{}) *XTemplate {
 	s.funcs[name] = fn
 	s.shared.Funcs(s.funcs)
 	return s
+}
+
+func (s *XTemplate) ListFuncs() {
+	for k, v := range s.funcs {
+		fmt.Printf("\n %s - %T", k, v)
+	}
 }
 
 // Lookup returns the template with the given name in the cache
