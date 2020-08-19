@@ -63,7 +63,7 @@ func New(folder string) *XTemplate {
 		"lower":  lower,
 		"upper":  upper,
 		"json":   marshalJSON,
-		"tag":    tags,
+		// "tag":    tags,
 	}
 
 	xt.shared.Funcs(funcs)
