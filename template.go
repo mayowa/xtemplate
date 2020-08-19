@@ -46,7 +46,7 @@ func init() {
 	// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
 	atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
 	// <tag (attr)>(content)</tag>
-	tagRe = regexp.MustCompile(`<tag([\s\S]+?)>(.+)?</tag>`)
+	tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>\s*(.*?)\s*</tag>`)
 }
 
 // New create new instance of XTemplate

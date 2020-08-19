@@ -182,13 +182,16 @@ func TestTagsOnly(t *testing.T) {
 	}
 	tpl := `
 	<tag type="text-field" class="red sm:red" x-data="{'a':1}"></tag>
-	<tag type="text-field" class="red sm:yello" x-data="{'b':2}"></tag>
+	<tag type="text-field" class="red sm:yello" x-data="{'b':2}">
+		<p>Hello</p>
+	</tag>
 	`
 	retv, err := xt.RenderString(tpl, data)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	assert.Equal(t, "\n\t\n\n<text-field  class=\"red sm:red\" x-data=\"{'a':1}\"></text-field>\n\n\t\n\n<text-field  class=\"red sm:yello\" x-data=\"{'b':2}\"></text-field>\n\n\t", retv)
+	exp := "\n\t\n\n<text-field  class=\"red sm:red\" x-data=\"{'a':1}\"></text-field>\n\n\t\n\n<text-field  class=\"red sm:yello\" x-data=\"{'b':2}\">\n\t\t<p>Hello</p>\n\t</text-field>\n\n\t"
+	assert.Equal(t, exp, retv)
 
 }
