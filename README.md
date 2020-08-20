@@ -47,3 +47,50 @@ rendering child.html will output
 ```
 Hello from child footer
 ```
+
+## Syntax sugar: c like function calls
+```html
+
+{{ login("name", "password") }}
+
+instead of
+{{ login "name" "password" }}
+
+```
+
+## Syntax sugar: template calls
+use defined template blocks (imported using the include directive)
+
+```html
+{{define "hello"}}
+  Hello {{ .name }}, age: {{.age}}
+{{end}}
+
+{{define "button"}}
+  a {{ upper("button") }} {{ . }}
+{{end}}
+
+call the blocks as follows
+
+{{ macro button("submit") }}
+
+or
+
+{{ template button("submit") }}
+
+or
+
+{{ macro hello("name"::"ayo", "age"::18) }}
+
+```
+
+## Syntax sugar: custom tags
+```html
+<tag type="field" label="name">
+  <input >
+</tag>
+
+gets translated to a function call to a user defined tag template function
+which then generates the output
+tag (type, attributes, content)
+```
