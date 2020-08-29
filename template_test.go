@@ -166,6 +166,7 @@ func TestTranslateTags(t *testing.T) {
 	src := []byte(`
 	<tag type="input" class="red sm:red"></tag>
 	<tag type="input" x-data="{'a':1}"></tag>
+
 	<tag type="p">{{.Name}}</tag>
 	<tag type="div">
 		<tag type="input" value="abc"></tag>
@@ -173,7 +174,7 @@ func TestTranslateTags(t *testing.T) {
 	`)
 	retv := string(translateTags(xt, src, 1))
 
-	exp := "\n\t<input class=\"red sm:red\"></input>\n\t<input x-data=\"{'a':1}\"></input>\n\t<p >{{.Name}}</p>\n\t<div >\n\t\t<input value=\"abc\"></input>\n\t</div>\n\t"
+	exp := "\n\t<input class=\"red sm:red\"></input>\n\t<input x-data=\"{'a':1}\"></input>\n\n\t<p >{{.Name}}</p>\n\t<div >\n\t\t<input value=\"abc\"></input>\n\t</div>\n\t"
 	assert.Equal(t, exp, retv)
 	// assert.Greater(t, len(retv), 5)
 
@@ -185,6 +186,7 @@ func TestTagsOnly(t *testing.T) {
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
+
 	tpl := `
 	<tag type="text-field" class="red sm:red" ></tag>
 	<tag type="text-field" x-data="{'b':2}">
@@ -192,16 +194,30 @@ func TestTagsOnly(t *testing.T) {
 		<p>{{.age}}</p>
 	</tag>
 	<tag type="div"><tag type="p" >{{.age}}</tag></tag>
+	<tag type="field">
+		<tag type="select" value=1>
+			{{range .options}}
+			<option value="{{.id}}">{{.label}}</option>
+			{{end}}
+		</tag>
+	</tag>
 	`
+
 	// tpl := `
-	// <tag type="div"><tag type="p" >{{.age}}</tag></tag>
+	// <tag type="field">
+	// 	<tag type="select" value=1>
+	// 		{{range .options}}
+	// 		<option value="{{.id}}">{{.label}}</option>
+	// 		{{end}}
+	// 	</tag>
+	// </tag>
 	// `
 	retv, err := xt.RenderString(tpl, data)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	exp := "\n\t<text-field class=\"red sm:red\"></text-field>\n\t<text-field x-data=\"{'b':2}\">\n\t\t<p>dinma</p>\n\t\t<p>18</p>\n\t</text-field>\n\t<div ><p >18</p></div>\n\t"
+	exp := "\n\t<text-field class=\"red sm:red\"></text-field>\n\t<text-field x-data=\"{'b':2}\">\n\t\t<p>dinma</p>\n\t\t<p>18</p>\n\t</text-field>\n\t<div ><p >18</p></div>\n\t<field >\n\t\t<select value=\"1\">\n\t\t\t\n\t\t</select>\n\t</field>\n\t"
 	assert.Equal(t, exp, retv)
 
 }

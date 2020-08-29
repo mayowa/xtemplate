@@ -46,7 +46,7 @@ func init() {
 	// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
 	atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
 	// <tag (attr)>(content)</tag>
-	tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>([\s\S]*?)</tag>`)
+	tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
 	tagRe2 = regexp.MustCompile(`<tag(\s+[^>]+)?>\s*(.*)\s*</tag>`)
 }
 
@@ -392,7 +392,6 @@ func preProccess(tpl *XTemplate, fleContent []byte) ([]byte, *frontMatter, error
 	fm, fleContent = extractFrontMatter(actRe, fleContent)
 
 	// <tag> --> tag .type .attr . content
-	fleContent = translateTags(tpl, fleContent, 1)
 	fleContent = translateTags(tpl, fleContent)
 
 	// handle {{ template }}
@@ -453,8 +452,19 @@ func translateFuncSyntax(src []byte) []byte {
 	return retv
 }
 
-// translateTags
-// <tag type="input" class="abc" disabled><p>hello</p></tag> --> tag .type .attributes .content
+/*
+ translateTags
+ Examples.
+ <tag type="input" class="abc" disabled><p>hello</p></tag>
+
+ <tag type="field">
+ 	<tag type="select" value=1>
+		{{range .options}}
+		<option value="{{.id}}">{{.label}}</option>
+		{{end}}
+  </tag>
+ </tag>
+*/
 func translateTags(xt *XTemplate, src []byte, mode ...int) []byte {
 	// match <tag></tag>
 	proc := func(b []byte) []byte {
@@ -490,20 +500,15 @@ func translateTags(xt *XTemplate, src []byte, mode ...int) []byte {
 		retv := string(tagFunc(tagType, attrMap, tagHTML))
 
 		// check if tag output includes tag construct
-		if tagRe2.Match([]byte(retv)) {
-			retv = string(translateTags(xt, []byte(retv), 1))
+		if tagRe.Match([]byte(retv)) {
+			retv = string(translateTags(xt, []byte(retv)))
 		}
 
 		// fmt.Println("\n\nsrc: ", string(b), "\nretv: ", retv)
 		return []byte(retv)
 	}
 
-	retv := []byte{}
-	if len(mode) > 0 && mode[0] == 1 {
-		retv = tagRe2.ReplaceAllFunc(src, proc)
-	} else {
-		retv = tagRe.ReplaceAllFunc(src, proc)
-	}
+	retv := tagRe.ReplaceAllFunc(src, proc)
 
 	return retv
 }
