@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/valyala/fasttemplate"
 	"golang.org/x/net/html"
 )
 
@@ -31,6 +30,7 @@ var tplRe *regexp.Regexp
 var mapRe *regexp.Regexp
 var atrRe *regexp.Regexp
 var tagRe *regexp.Regexp
+var tagRe2 *regexp.Regexp
 
 func init() {
 	// {{ ...  }}
@@ -46,7 +46,8 @@ func init() {
 	// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
 	atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
 	// <tag (attr)>(content)</tag>
-	tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>\s*(.*?)\s*</tag>`)
+	tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>([\s\S]*?)</tag>`)
+	tagRe2 = regexp.MustCompile(`<tag(\s+[^>]+)?>\s*(.*)\s*</tag>`)
 }
 
 // New create new instance of XTemplate
@@ -225,7 +226,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 
 	fleContent := []byte(tplStr)
 	var fm *frontMatter
-	fleContent, fm, err = preProccess(fleContent)
+	fleContent, fm, err = preProccess(s, fleContent)
 	if err != nil {
 		return "", err
 	}
@@ -258,7 +259,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 		for i := range fm.Include {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
 		}
-		_, err = parseFiles(tpl, fm.Include...)
+		_, err = parseFiles(s, tpl, fm.Include...)
 		if err != nil {
 			return "", err
 		}
@@ -289,7 +290,7 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	}
 
 	var fm *frontMatter
-	fleContent, fm, err = preProccess(fleContent)
+	fleContent, fm, err = preProccess(s, fleContent)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +334,7 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
 
 		}
-		_, err = parseFiles(tpl, fm.Include...)
+		_, err = parseFiles(s, tpl, fm.Include...)
 		if err != nil {
 			return nil, err
 		}
@@ -351,14 +352,14 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 	return tpl.New(name).Parse(string(content))
 }
 
-func parseFiles(t *template.Template, filenames ...string) (*template.Template, error) {
+func parseFiles(xt *XTemplate, t *template.Template, filenames ...string) (*template.Template, error) {
 
 	for _, filename := range filenames {
 		b, err := ioutil.ReadFile(filename)
 		if err != nil {
 			return nil, err
 		}
-		prd, _, err := preProccess(b)
+		prd, _, err := preProccess(xt, b)
 		if err != nil {
 			return nil, err
 		}
@@ -384,14 +385,15 @@ func parseFiles(t *template.Template, filenames ...string) (*template.Template, 
 	return t, nil
 }
 
-func preProccess(fleContent []byte) ([]byte, *frontMatter, error) {
+func preProccess(tpl *XTemplate, fleContent []byte) ([]byte, *frontMatter, error) {
 
 	// extract front matter
 	var fm *frontMatter
 	fm, fleContent = extractFrontMatter(actRe, fleContent)
 
 	// <tag> --> tag .type .attr . content
-	fleContent = translateTags(fleContent)
+	fleContent = translateTags(tpl, fleContent, 1)
+	fleContent = translateTags(tpl, fleContent)
 
 	// handle {{ template }}
 	fleContent = convertTemplateSyntax(tplRe, fleContent)
@@ -453,9 +455,9 @@ func translateFuncSyntax(src []byte) []byte {
 
 // translateTags
 // <tag type="input" class="abc" disabled><p>hello</p></tag> --> tag .type .attributes .content
-func translateTags(src []byte) []byte {
+func translateTags(xt *XTemplate, src []byte, mode ...int) []byte {
 	// match <tag></tag>
-	retv := tagRe.ReplaceAllFunc([]byte(src), func(b []byte) []byte {
+	proc := func(b []byte) []byte {
 		doc, err := goquery.NewDocumentFromReader(bytes.NewReader(b))
 		if err != nil {
 			return b
@@ -470,34 +472,38 @@ func translateTags(src []byte) []byte {
 		}
 		tagHTML = html.UnescapeString(tagHTML)
 
-		// fmt.Println("tagHTML --->>", tagHTML)
-
-		varName := randString(10)
-		attrList := []string{}
+		// varName := randString(10)
+		attrMap := map[string]interface{}{}
 		for _, i := range tagAttr {
 			if (i.Key) == "type" {
 				continue
 			}
 
-			attrList = append(attrList,
-				fmt.Sprintf(`"%s"`, i.Key),
-				fmt.Sprintf("`%s`", i.Val),
-			)
+			attrMap[i.Key] = i.Val
 		}
-		tpl := `{{ $[var]Html := [html] }}
-{{ $[var]Attr := kwargs [attr] }}
-{{ tag "[type]" $[var]Attr $[var]Html }}
-`
-		t := fasttemplate.New(tpl, "[", "]")
-		retv := t.ExecuteString(map[string]interface{}{
-			"var":  varName,
-			"type": tagType,
-			"html": fmt.Sprintf("`%s`", tagHTML),
-			"attr": strings.Join(attrList, " "),
-		})
 
+		tagFunc, valid := xt.funcs["tag"].(func(typ string, attr map[string]interface{}, content string) template.HTML)
+		if !valid {
+			return b
+		}
+
+		retv := string(tagFunc(tagType, attrMap, tagHTML))
+
+		// check if tag output includes tag construct
+		if tagRe2.Match([]byte(retv)) {
+			retv = string(translateTags(xt, []byte(retv), 1))
+		}
+
+		// fmt.Println("\n\nsrc: ", string(b), "\nretv: ", retv)
 		return []byte(retv)
-	})
+	}
+
+	retv := []byte{}
+	if len(mode) > 0 && mode[0] == 1 {
+		retv = tagRe2.ReplaceAllFunc(src, proc)
+	} else {
+		retv = tagRe.ReplaceAllFunc(src, proc)
+	}
 
 	return retv
 }

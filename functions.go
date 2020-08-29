@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"math/rand"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -70,7 +72,7 @@ func tags(typ string, attr map[string]interface{}, content string) template.HTML
 			for k, v := range attr {
 				retv = fmt.Sprintf("%s %s=\"%v\"", retv, k, v)
 			}
-			return w.Write([]byte(retv))
+			return w.Write([]byte(strings.TrimSpace(retv)))
 		default:
 			return w.Write([]byte(content))
 		}
@@ -170,4 +172,30 @@ func randString(n int) string {
 	}
 
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+// MixAsset reads a laravel-mix mix-manifest.json file
+// and returns the hashed filename.
+// assumes that the file will be in ./static
+func MixAsset(publicPath, publicURL string) func(val string) string {
+	return func(val string) string {
+
+		manifest := filepath.Join(publicPath, "mix-manifest.json")
+		content, err := ioutil.ReadFile(manifest)
+		if err != nil {
+			return fmt.Sprintf("err-cant-read-mix-manifest")
+		}
+
+		data := map[string]string{}
+		if err := json.Unmarshal(content, &data); err != nil {
+			return fmt.Sprintf("err-cant-unmarshal-mix-manifest")
+		}
+
+		retv, found := data[val]
+		if !found {
+			return val
+		}
+
+		return publicURL + retv
+	}
 }

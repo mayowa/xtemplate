@@ -74,7 +74,7 @@ func TestIncludes(t *testing.T) {
 
 	assert.Equal(
 		t,
-		"master \nwith overlay body<br>\n\na BUTTON submit2\n\n\n\n* A\n\n* B\n\n\n\nHello mayowa, age: 18\n\n\n<div  class=\"red\">\n    <p>Hello</p>\n    <p>World</p>\n</div>\n\na footer\n",
+		"master \nwith overlay body<br>\n\na BUTTON submit2\n\n\n\n* A\n\n* B\n\n\n\nHello mayowa, age: 18\n\n\n<div class=\"red\">\n    <p>Hello</p>\n    <p>World</p>\n</div>\n\n\n\na footer\n",
 		buff.String(),
 	)
 }
@@ -162,13 +162,18 @@ func TestRenderString(t *testing.T) {
 
 func TestTranslateTags(t *testing.T) {
 
+	xt := New("")
 	src := []byte(`
-	<tag type="input" class="red sm:red" x-data="{'a':1}"></tag>
-	<tag type="input" class="yello sm:red" x-data="{'a':1}"></tag>
+	<tag type="input" class="red sm:red"></tag>
+	<tag type="input" x-data="{'a':1}"></tag>
+	<tag type="p">{{.Name}}</tag>
+	<tag type="div">
+		<tag type="input" value="abc"></tag>
+	</tag>
 	`)
-	retv := string(translateTags(src))
+	retv := string(translateTags(xt, src, 1))
 
-	exp := "\n\t\n\t\t{{ $jputeHFozdHtml := `` }}\n\t\t{{ $jputeHFozdAttr := kwargs [\"class\" `red sm:red` \"x-data\" `{'a':1}`] }}\n\t\ttag \"input\" $jputeHFozdAttr $jputeHFozdHtml\n\t\t\n\t"
+	exp := "\n\t<input class=\"red sm:red\"></input>\n\t<input x-data=\"{'a':1}\"></input>\n\t<p >{{.Name}}</p>\n\t<div >\n\t\t<input value=\"abc\"></input>\n\t</div>\n\t"
 	assert.Equal(t, exp, retv)
 	// assert.Greater(t, len(retv), 5)
 
@@ -181,17 +186,22 @@ func TestTagsOnly(t *testing.T) {
 		"name": "dinma", "age": 18,
 	}
 	tpl := `
-	<tag type="text-field" class="red sm:red" x-data="{'a':1}"></tag>
-	<tag type="text-field" class="red sm:yello" x-data="{'b':2}">
-		<p>Hello</p>
+	<tag type="text-field" class="red sm:red" ></tag>
+	<tag type="text-field" x-data="{'b':2}">
+		<p>{{.name}}</p>
+		<p>{{.age}}</p>
 	</tag>
+	<tag type="div"><tag type="p" >{{.age}}</tag></tag>
 	`
+	// tpl := `
+	// <tag type="div"><tag type="p" >{{.age}}</tag></tag>
+	// `
 	retv, err := xt.RenderString(tpl, data)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	exp := "\n\t\n\n<text-field  class=\"red sm:red\" x-data=\"{'a':1}\"></text-field>\n\n\t\n\n<text-field  class=\"red sm:yello\" x-data=\"{'b':2}\">\n\t\t<p>Hello</p>\n\t</text-field>\n\n\t"
+	exp := "\n\t<text-field class=\"red sm:red\"></text-field>\n\t<text-field x-data=\"{'b':2}\">\n\t\t<p>dinma</p>\n\t\t<p>18</p>\n\t</text-field>\n\t<div ><p >18</p></div>\n\t"
 	assert.Equal(t, exp, retv)
 
 }
