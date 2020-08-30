@@ -1,3 +1,9 @@
-master {{block "body" . }} original master body {{end}}
-{{block "footer" . }}
+{{extends "base.html"}}
+
+{{define "body"}}
+    original master body
+    {{block "overlay" .}}{{end}}
+{{end}}
+
+{{define "footer" }}
 {{end}}
