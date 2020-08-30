@@ -156,7 +156,7 @@ func TestRenderString(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	assert.Equal(t, "master \n\twith overlay body<br>\n\t\na BUTTON submit\n\n\t\n\na footer\n", retv)
+	assert.Equal(t, "The Base\n\n\n** Master\n\n\twith overlay body<br>\n\t\na BUTTON submit\n\n\t\n\n\na footer\n\n", retv)
 
 }
 
