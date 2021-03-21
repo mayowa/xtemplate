@@ -177,7 +177,7 @@ func randString(n int) string {
 // MixAsset reads a laravel-mix mix-manifest.json file
 // and returns the hashed filename.
 // assumes that the file will be in ./static
-func MixAsset(publicPath, publicURL string) func(val string) string {
+func MixAsset(publicPath string) func(val string) string {
 	return func(val string) string {
 
 		manifest := filepath.Join(publicPath, "mix-manifest.json")
@@ -196,6 +196,6 @@ func MixAsset(publicPath, publicURL string) func(val string) string {
 			return val
 		}
 
-		return publicURL + retv
+		return retv
 	}
 }
