@@ -128,7 +128,7 @@ func (s *XTemplate) ParseFile(name string) error {
 }
 
 // ParseDir parse all templates
-func (s *XTemplate) ParseDir(root, extension string, onlyPartials bool) error {
+func (s *XTemplate) parseDir(root, extension string, onlyPartials bool) error {
 	// parse partial templates (i.e files that are named _xxxxx.ext)
 	_, err := s.shared.ParseGlob("_*")
 	if err != nil {
@@ -204,12 +204,7 @@ func (s *XTemplate) Render(wr io.Writer, name string, data interface{}, ignoreCa
 		}
 	}
 
-	buff := bytes.NewBuffer([]byte{})
-	if err = tpl.Execute(buff, data); err != nil {
-		return err
-	}
-
-	if _, err = buff.WriteTo(wr); err != nil {
+	if err = tpl.Execute(wr, data); err != nil {
 		return err
 	}
 
