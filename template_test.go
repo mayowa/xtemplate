@@ -9,29 +9,29 @@ import (
 
 func TestIgnoreCache(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
 
 	buff := bytes.NewBufferString("")
-	if err := xt.Render(buff, "plain.html", data, true); err != nil {
+	if err := xt.Render(buff, "plain", data, true); err != nil {
 		t.Error(err)
 		return
 	}
 
 	assert.Equal(t, "dinma is 18\n", buff.String())
-	assert.Nil(t, xt.Lookup("plain.html"))
+	assert.Nil(t, xt.Lookup("plain"))
 }
 
 func TestCache(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
 
-	assert.Nil(t, xt.ParseFile("plain.html"))
+	assert.NoError(t, xt.ParseFile("plain"))
 
 	buff := bytes.NewBufferString("")
 	if err := xt.Render(buff, "plain.html", data, false); err != nil {
@@ -40,18 +40,18 @@ func TestCache(t *testing.T) {
 	}
 
 	assert.Equal(t, "dinma is 18\n", buff.String())
-	assert.NotNil(t, xt.Lookup("plain.html"))
+	assert.NotNil(t, xt.Lookup("plain"))
 }
 
 func TestMasterChild(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
 
 	buff := bytes.NewBufferString("")
-	if err := xt.Render(buff, "overlay.html", data, true); err != nil {
+	if err := xt.Render(buff, "overlay", data, true); err != nil {
 		t.Error(err)
 		return
 	}
@@ -61,7 +61,7 @@ func TestMasterChild(t *testing.T) {
 
 func TestIncludes(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -81,7 +81,7 @@ func TestIncludes(t *testing.T) {
 
 func TestSubFolderFile(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -98,7 +98,7 @@ func TestSubFolderFile(t *testing.T) {
 
 func TestFunctionSyntax(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -114,7 +114,7 @@ func TestFunctionSyntax(t *testing.T) {
 
 func TestFunctions(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -138,7 +138,7 @@ func TestFunctions(t *testing.T) {
 
 func TestRenderString(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -162,7 +162,7 @@ func TestRenderString(t *testing.T) {
 
 func TestTranslateTags(t *testing.T) {
 
-	xt := New("")
+	xt := New("", "html")
 	src := []byte(`
 	<tag type="input" class="red sm:red"></tag>
 	<tag type="input" x-data="{'a':1}"></tag>
@@ -182,7 +182,7 @@ func TestTranslateTags(t *testing.T) {
 
 func TestTagsOnly(t *testing.T) {
 
-	xt := New("./samples")
+	xt := New("./samples", "html")
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}

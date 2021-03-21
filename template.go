@@ -18,6 +18,7 @@ import (
 // XTemplate ...
 type XTemplate struct {
 	folder string
+	ext    string
 	shared *template.Template
 	cache  map[string]*template.Template
 	funcs  template.FuncMap
@@ -51,12 +52,16 @@ func init() {
 }
 
 // New create new instance of XTemplate
-func New(folder string) *XTemplate {
+func New(folder, ext string) *XTemplate {
 
 	xt := new(XTemplate)
 	xt.cache = make(map[string]*template.Template)
 	xt.folder = folder
 	xt.shared = template.New("")
+	xt.ext = ext
+	if xt.ext == "" {
+		xt.ext = "html"
+	}
 
 	funcs := template.FuncMap{
 		"args":   args,
@@ -122,6 +127,7 @@ func (s *XTemplate) ParseFile(name string) error {
 	}
 
 	// cache template
+	_, name = getFilename(s.folder, name, s.ext)
 	s.cache[name] = tpl
 
 	return nil
@@ -254,7 +260,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 		for i := range fm.Include {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
 		}
-		_, err = parseFiles(s, tpl, fm.Include...)
+		_, err = parseFiles(s, tpl, s.ext, fm.Include...)
 		if err != nil {
 			return "", err
 		}
@@ -275,8 +281,23 @@ type frontMatter struct {
 	Include []string `yaml:"include"`
 }
 
+func getFilename(folder, name, ext string) (fileName string, tplName string) {
+	fle := filepath.Join(folder, name)
+	// add a file extension if one isn't provided
+	if filepath.Ext(fle) == "" {
+		fle += "." + ext
+	}
+
+	// remove file extension if one is provided
+	if filepath.Ext(name) != "" {
+		name = strings.Replace(name, filepath.Ext(name), "", 1)
+	}
+
+	return fle, name
+}
+
 func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
-	fle := filepath.Join(s.folder, name)
+	fle, name := getFilename(s.folder, name, s.ext)
 
 	// read template into a buffer
 	fleContent, err := ioutil.ReadFile(fle)
@@ -327,9 +348,8 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	if len(fm.Include) > 0 {
 		for i := range fm.Include {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
-
 		}
-		_, err = parseFiles(s, tpl, fm.Include...)
+		_, err = parseFiles(s, tpl, s.ext, fm.Include...)
 		if err != nil {
 			return nil, err
 		}
@@ -347,9 +367,11 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 	return tpl.New(name).Parse(string(content))
 }
 
-func parseFiles(xt *XTemplate, t *template.Template, filenames ...string) (*template.Template, error) {
+// parseFiles expects filenames to have extensions
+func parseFiles(xt *XTemplate, t *template.Template, ext string, filenames ...string) (*template.Template, error) {
 
 	for _, filename := range filenames {
+		filename, name := getFilename("", filename, ext)
 		b, err := ioutil.ReadFile(filename)
 		if err != nil {
 			return nil, err
@@ -360,8 +382,7 @@ func parseFiles(xt *XTemplate, t *template.Template, filenames ...string) (*temp
 		}
 
 		s := string(prd)
-		name := filepath.Base(filename)
-
+		name = filepath.Base(name)
 		var tmpl *template.Template
 		if t == nil {
 			t = template.New(name)
