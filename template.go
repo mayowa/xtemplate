@@ -264,7 +264,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 		for i := range fm.Include {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
 		}
-		_, err = parseFiles(s, tpl, s.ext, fm.Include...)
+		_, err = parseFiles(s, tpl, s.folder, s.ext, fm.Include...)
 		if err != nil {
 			return "", err
 		}
@@ -353,7 +353,7 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		for i := range fm.Include {
 			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
 		}
-		_, err = parseFiles(s, tpl, s.ext, fm.Include...)
+		_, err = parseFiles(s, tpl, s.folder, s.ext, fm.Include...)
 		if err != nil {
 			return nil, err
 		}
@@ -372,7 +372,8 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 }
 
 // parseFiles expects filenames to have extensions
-func parseFiles(xt *XTemplate, t *template.Template, ext string, filenames ...string) (*template.Template, error) {
+func parseFiles(xt *XTemplate, t *template.Template, baseFolder, ext string, filenames ...string) (*template.Template, error) {
+	baseFolder = filepath.Join(baseFolder) + "/"
 
 	for _, filename := range filenames {
 		p := strings.Split(filename, "|")
@@ -400,7 +401,7 @@ func parseFiles(xt *XTemplate, t *template.Template, ext string, filenames ...st
 		}
 
 		s := string(prd)
-		name = filepath.Base(name)
+		name = strings.Replace(name, baseFolder, "", 1)
 		var tmpl *template.Template
 		if t == nil {
 			t = template.New(name)
