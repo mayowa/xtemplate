@@ -74,7 +74,7 @@ func TestIncludes(t *testing.T) {
 
 	assert.Equal(
 		t,
-		"The Base\n\n\n** Master\n\nwith overlay body<br>\n\na BUTTON submit2\n\n\n\n* A\n\n* B\n\n\n\nHello mayowa, age: 18\n\n\n<div class=\"red\">\n    <p>Hello</p>\n    <p>World</p>\n</div>\n\n\n\n\na footer\n\n",
+		"The Base\n\n\n** Master\n\nwith overlay body<br>\n\na BUTTON submit2\n\n\n* A\n\n* B\n\n\nHello mayowa, age: 18\n<div class=\"red\">\n    <p>Hello</p>\n    <p>World</p>\n</div>\n\n\n\n\na footer\n\n",
 		buff.String(),
 	)
 }
@@ -156,7 +156,7 @@ func TestRenderString(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	assert.Equal(t, "The Base\n\n\n** Master\n\n\twith overlay body<br>\n\t\na BUTTON submit\n\n\t\n\n\na footer\n\n", retv)
+	assert.Equal(t, "The Base\n\n\n** Master\n\n\twith overlay body<br>\n\t\na BUTTON submit\n\n\n\na footer\n\n", retv)
 
 }
 
@@ -220,4 +220,24 @@ func TestTagsOnly(t *testing.T) {
 	exp := "\n\t<text-field class=\"red sm:red\"></text-field>\n\t<text-field x-data=\"{'b':2}\">\n\t\t<p>dinma</p>\n\t\t<p>18</p>\n\t</text-field>\n\t<div ><p >18</p></div>\n\t<field >\n\t\t<select value=\"1\">\n\t\t\t\n\t\t</select>\n\t</field>\n\t"
 	assert.Equal(t, exp, retv)
 
+}
+
+func TestExtractedTemplates(t *testing.T) {
+
+	xt := New("./samples", "html")
+	data := map[string]interface{}{
+		"name": "dinma", "age": 18,
+	}
+
+	buff := bytes.NewBufferString("")
+	if err := xt.Render(buff, "tplAction.html", data, true); err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(
+		t,
+		"\n\n\n\n\n\n\n\na BUTTON submit2\n\n\n* A\n\n* B\n\n\nHello mayowa, age: 18\nIm just text",
+		buff.String(),
+	)
 }

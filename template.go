@@ -32,6 +32,7 @@ var mapRe *regexp.Regexp
 var atrRe *regexp.Regexp
 var tagRe *regexp.Regexp
 var tagRe2 *regexp.Regexp
+var tplRe2 *regexp.Regexp
 
 func init() {
 	// {{ ...  }}
@@ -39,16 +40,19 @@ func init() {
 	// fnMix("index.html", 2)
 	expRe = regexp.MustCompile(`([a-zA-Z]+[0-9]*)\((.+)\)`)
 	// {{ extend "index.html" }}
-	actRe = regexp.MustCompile(`[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*`)
+	actRe = regexp.MustCompile(`\-*[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*\-*`)
 	// {{ template button(123) }}
-	tplRe = regexp.MustCompile(`{{\s*(macro|template)\s*([a-zA-Z0-9\-_]+)\s*\((.*?)\)\s*}}`)
+	tplRe = regexp.MustCompile(`{{\-*\s*(macro|template)\s*([a-zA-Z0-9\-_]+)\s*\((.*?)\)\s*\-*}}`)
 	// {"attri":v, "attr2":"val2"}
 	mapRe = regexp.MustCompile(`(?s)[\,|\(|\s]\{\s?(.+)\s?\}`)
 	// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
 	atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
 	// <tag (attr)>(content)</tag>
 	tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
-	tagRe2 = regexp.MustCompile(`<tag(\s+[^>]+)?>\s*(.*)\s*</tag>`)
+	// {{template "tplName"}}
+	// {{template "tplName" . }}
+	// {{template "tplName" $ }}
+	tplRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
 }
 
 // New create new instance of XTemplate
@@ -371,9 +375,23 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 func parseFiles(xt *XTemplate, t *template.Template, ext string, filenames ...string) (*template.Template, error) {
 
 	for _, filename := range filenames {
+		p := strings.Split(filename, "|")
+		filename = p[0]
+		fromTplAction := false
+		if len(p) > 1 && p[1] == "ta" {
+			fromTplAction = true
+		}
+
 		filename, name := getFilename("", filename, ext)
 		b, err := ioutil.ReadFile(filename)
 		if err != nil {
+			if fromTplAction {
+				// this template was referenced in a {{template "name"}} action
+				// and included by extractTemplates so its possible that its
+				// not an actual file but a template defined elsewhere
+				continue
+			}
+
 			return nil, err
 		}
 		prd, _, err := preProccess(xt, b)
@@ -407,6 +425,9 @@ func preProccess(tpl *XTemplate, fleContent []byte) ([]byte, *frontMatter, error
 	var fm *frontMatter
 	fm, fleContent = extractFrontMatter(actRe, fleContent)
 
+	// add template "name" to includes
+	fm = extractTemplates(tplRe2, fm, fleContent)
+
 	// <tag> --> tag .type .attr . content
 	fleContent = translateTags(tpl, fleContent)
 
@@ -421,6 +442,28 @@ func preProccess(tpl *XTemplate, fleContent []byte) ([]byte, *frontMatter, error
 	return fleContent, fm, nil
 }
 
+func extractTemplates(re *regexp.Regexp, fm *frontMatter, fleContent []byte) *frontMatter {
+
+	// get all actions matching {{template "tplName" .}}
+	matches := re.FindAll(fleContent, -1)
+	if matches == nil {
+		return fm
+	}
+
+	if fm == nil && len(matches) > 0 {
+		fm = &frontMatter{}
+	}
+
+	for _, i := range matches {
+		parts := re.FindStringSubmatch(string(i))
+		if len(parts) >= 2 {
+			fm.Include = append(fm.Include, parts[1]+"|ta")
+		}
+	}
+
+	return fm
+}
+
 // convertTemplateSyntax
 // {{ template button("args") }} --> {{ template "button" "args" }}
 // {{ macro button("args") }} --> {{ template "button" "args" }}
@@ -432,18 +475,18 @@ func convertTemplateSyntax(re *regexp.Regexp, src []byte) []byte {
 
 		retStr := ""
 		if len(part) == 3 {
-			retStr = fmt.Sprintf("{{ template \"%s\" }}", string(part[2]))
+			retStr = fmt.Sprintf("{{ template \"%s\" -}}", string(part[2]))
 		} else if len(part) == 4 {
 			if bytes.Count(part[3], []byte("::")) > 0 {
 				arg := bytes.TrimSpace(bytes.Replace(part[3], []byte("::"), []byte(" "), -1))
 				arg = bytes.TrimSpace(bytes.Replace(arg, []byte(","), []byte(" "), -1))
-				retStr = fmt.Sprintf("{{ template \"%s\" kwargs %s }}", string(part[2]), string(arg))
+				retStr = fmt.Sprintf("{{ template \"%s\" kwargs %s -}}", string(part[2]), string(arg))
 			} else if bytes.Count(part[3], []byte(",")) > 0 {
 				arg := bytes.TrimSpace(bytes.Replace(part[3], []byte(","), []byte(" "), -1))
-				retStr = fmt.Sprintf("{{ template \"%s\" args %s }}", string(part[2]), string(arg))
+				retStr = fmt.Sprintf("{{ template \"%s\" args %s -}}", string(part[2]), string(arg))
 			} else {
 				arg := part[3]
-				retStr = fmt.Sprintf("{{ template \"%s\" %s }}", string(part[2]), string(arg))
+				retStr = fmt.Sprintf("{{ template \"%s\" %s -}}", string(part[2]), string(arg))
 			}
 		}
 		return []byte(retStr)
