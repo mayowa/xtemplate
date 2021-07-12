@@ -24,36 +24,36 @@ type XTemplate struct {
 	funcs  template.FuncMap
 }
 
-var lneRe *regexp.Regexp
-var expRe *regexp.Regexp
-var actRe *regexp.Regexp
-var tplRe *regexp.Regexp
-var mapRe *regexp.Regexp
-var atrRe *regexp.Regexp
-var tagRe *regexp.Regexp
-var tagRe2 *regexp.Regexp
-var tplRe2 *regexp.Regexp
+// {{ ...  }}
+var lneRe = regexp.MustCompile(`{{.+?}}`)
 
-func init() {
-	// {{ ...  }}
-	lneRe = regexp.MustCompile(`{{.+?}}`)
-	// fnMix("index.html", 2)
-	expRe = regexp.MustCompile(`([a-zA-Z]+[0-9]*)\((.+)\)`)
-	// {{ extend "index.html" }}
-	actRe = regexp.MustCompile(`\-*[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*\-*`)
-	// {{ template button(123) }}
-	tplRe = regexp.MustCompile(`{{\-*\s*(macro|template)\s*([a-zA-Z0-9\-_]+)\s*\((.*?)\)\s*\-*}}`)
-	// {"attri":v, "attr2":"val2"}
-	mapRe = regexp.MustCompile(`(?s)[\,|\(|\s]\{\s?(.+)\s?\}`)
-	// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
-	atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
-	// <tag (attr)>(content)</tag>
-	tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
-	// {{template "tplName"}}
-	// {{template "tplName" . }}
-	// {{template "tplName" $ }}
-	tplRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
-}
+// fnMix("index.html", 2)
+var expRe = regexp.MustCompile(`([a-zA-Z]+[0-9]*)\((.+)\)`)
+
+// {{ extend "index.html" }}
+var actRe = regexp.MustCompile(`\-*[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:]]*[\r\n]*\-*`)
+
+// {{ template button(123) }}
+var tplRe = regexp.MustCompile(`{{\-*\s*(macro|template)\s*([a-zA-Z0-9\-_]+)\s*\((.*?)\)\s*\-*}}`)
+
+// {"attri":v, "attr2":"val2"}
+var mapRe = regexp.MustCompile(`(?s)[\,|\(|\s]\{\s?(.+)\s?\}`)
+
+// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
+var atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
+
+// <tag (attr)>(content)</tag>
+var tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
+
+// {{template "tplName"}}
+// {{template "tplName" . }}
+// {{template "tplName" $ }}
+var tagRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
+var tplRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
+
+// expressions for the new lexer
+var tplBlockStart = regexp.MustCompile(`{{-*\s*([*#\w-]+)\s+(["\w \t_-]+?)\s*-*}}`)
+var tplBlockEnd = regexp.MustCompile(`{{-*\s*end\s*-*}}`)
 
 // New create new instance of XTemplate
 func New(folder, ext string) *XTemplate {
