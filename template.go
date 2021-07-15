@@ -246,7 +246,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 		if err != nil {
 			return "", err
 		}
-	} else if fm != nil && len(fm.Master) > 0 {
+	} else if len(fm.Master) > 0 {
 		// get the master template
 		master, err := s.getTemplate(fm.Master)
 		if err != nil {
@@ -451,7 +451,7 @@ func extractTemplates(re *regexp.Regexp, fm *frontMatter, fleContent []byte) *fr
 		return fm
 	}
 
-	if fm == nil && len(matches) > 0 {
+	if fm == nil  {
 		fm = &frontMatter{}
 	}
 

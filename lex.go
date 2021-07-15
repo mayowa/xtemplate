@@ -101,14 +101,6 @@ const (
 	ActionTypeBlockEnd
 )
 
-type Lexicon struct {
-	currentPos int64
-	src        []byte
-	lastAction int
-	actions    []ActionItem
-	blocks     []BlockItem
-}
-
 type ActionItem struct {
 	name       string
 	parameters string
@@ -125,6 +117,8 @@ type BlockItem struct {
 	endPos     int
 	src        []byte
 	content    []byte
+	contentStart int
+	contentEnd int
 }
 
 func (b BlockItem) String() string {
@@ -135,7 +129,51 @@ func (i ActionItem) Type() ActionType {
 	return StrToAction(i.name)
 }
 
-func (l *Lexicon) parse() {
+type ActionFilter []ActionType
+
+func (f ActionFilter) Includes(v ActionType) bool {
+	for _, i := range f {
+		if i == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func Transform(content []byte) error {
+	lex := Lexicon{
+		src: content,
+	}
+	
+	lex.parse(ActionFilter{ComponentAction, SlotAction})
+	for _, i := range lex.blocks {
+		fmt.Println(i.name, i.parameters)
+	}
+	
+	return nil
+}
+
+type Lexicon struct {
+	currentPos int64
+	src        []byte
+	lastAction int
+	actions    []ActionItem
+	blocks     []BlockItem
+	filter     ActionFilter
+}
+
+func (l *Lexicon) parse(filter ActionFilter) {
+	l.filter = filter
+	if l.filter == nil {
+		l.filter = ActionFilter{
+			ComponentAction, SlotAction,
+			IfAction, RangeAction, WithAction,
+			BlockAction, DefineAction, ElseAction,
+			EndAction, OtherAction,
+		}
+
+	}
 	l.parseActions()
 	l.parseBlocks(0)
 }
@@ -169,7 +207,7 @@ func (l *Lexicon) parseActions() {
 		}
 
 		l.actions = append(l.actions, action)
-		fmt.Println(i, ":", action.name, action.Type().String(), action.tokenType.String())
+		// fmt.Println(i, ":", action.name, action.Type().String(), action.tokenType.String())
 	}
 }
 
@@ -201,12 +239,17 @@ func (l *Lexicon) parseBlocks(idx int) int {
 				startPos:   act.startPos,
 				endPos:     a.endPos,
 				content:    l.src[act.endPos:a.startPos],
+				contentStart: act.endPos,
+				contentEnd: a.startPos,
 			}
 
 			blk.src = l.src[blk.startPos:blk.endPos]
 			foundBlkStart = -1
-			l.blocks = append(l.blocks, blk)
-			fmt.Println(blk)
+
+			if l.filter.Includes(act.Type()) {
+				l.blocks = append(l.blocks, blk)
+				// fmt.Println(blk)
+			}
 
 			if idx != 0 {
 				// exit recursion
@@ -216,16 +259,4 @@ func (l *Lexicon) parseBlocks(idx int) int {
 	}
 
 	return len(l.actions) - 1
-}
-
-type Items []string
-
-func (b Items) Includes(item string) bool {
-	for _, i := range b {
-		if i == item {
-			return true
-		}
-	}
-
-	return false
 }
