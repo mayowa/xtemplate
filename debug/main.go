@@ -12,58 +12,38 @@ such as the button/click pair above, by omitting the event name:
 
 <button data-action="gallery#next">…</button>
 
-{{#component 123 "card"}}
+{{#component "card" id}}
 	Hello World
-	{{#slot "header"}}Title{{end}}
+	{{#slot "header" card}}Title{{end}}
 
-	{{#slot "body"}}
-	Chidinma is a fine girl!
+	{{#slot "body" card}}
+		Chidinma is a fine girl!
+		{{#component "article"}}
+			{{#slot "body" article}}
+			In the beginning was the word, and the Word was with God and the word was God!
+			{{end}}
+		{{end}}
 	{{end}}
 {{end}}
-
-<table>
-<thead>
-<tr>
-<th>Element</th>
-<th>Default Event</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>a</td>
-<td>click</td>
-</tr>
-<tr>
-<td>button</td>
-<td>click</td>
-</tr>
-<tr>
-<td>form</td>
-<td>submit</td>
-</tr>
-<tr>
-<td>input</td>
-<td>input</td>
-</tr>
-<tr>
-<td>input type=submit</td>
-<td>click</td>
-</tr>
-<tr>
-<td>select</td>
-<td>change</td>
-</tr>
-<tr>
-<td>textarea</td>
-<td>input</td>
-</tr>
-</tbody>
-</table>
 `
+
+/*
+{{#component "table" id}}
+
+{{#slot "tab1" table}}
+tab 1
+{{end}}
+
+{{#slot "tab2" table}}
+tab 2
+{{end}}
+{{end}}*/
+
 func main() {
+	println(tplSource)
 	err := xtemplate.Transform([]byte(tplSource))
 	if err != nil {
 		fmt.Println(err)
-		return 
+		return
 	}
 }

@@ -451,7 +451,7 @@ func extractTemplates(re *regexp.Regexp, fm *frontMatter, fleContent []byte) *fr
 		return fm
 	}
 
-	if fm == nil  {
+	if fm == nil {
 		fm = &frontMatter{}
 	}
 

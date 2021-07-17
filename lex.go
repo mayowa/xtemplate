@@ -110,18 +110,26 @@ type ActionItem struct {
 	tokenType  TokenType
 }
 
-type BlockItem struct {
-	name       string
-	parameters string
-	startPos   int
-	endPos     int
-	src        []byte
-	content    []byte
+type Block struct {
+	name         string
+	parameters   string
+	startPos     int
+	endPos       int
+	blockType    ActionType
+	src          []byte
+	content      []byte
 	contentStart int
-	contentEnd int
+	contentEnd   int
 }
 
-func (b BlockItem) String() string {
+type Blocks []Block
+func (b *Blocks) Len() int      {return  len(*b)}
+func (b *Blocks) Swap(i, j int) { (*b)[i], (*b)[j] = (*b)[j], (*b)[i] }
+func (b *Blocks) Less(i, j int) bool {
+	return (*b)[i].endPos < (*b)[j].endPos
+}
+
+func (b Block) String() string {
 	return fmt.Sprint(b.name, "(", b.parameters, " ) :", string(b.content))
 }
 
@@ -129,28 +137,25 @@ func (i ActionItem) Type() ActionType {
 	return StrToAction(i.name)
 }
 
-type ActionFilter []ActionType
-
-func (f ActionFilter) Includes(v ActionType) bool {
-	for _, i := range f {
-		if i == v {
-			return true
-		}
-	}
-
-	return false
-}
-
 func Transform(content []byte) error {
 	lex := Lexicon{
 		src: content,
 	}
-	
-	lex.parse(ActionFilter{ComponentAction, SlotAction})
+
+	// lex.parse(ActionFilter{ComponentAction, SlotAction})
+	lex.parseActions()
+	fmt.Println("== Blocks ==")
 	for _, i := range lex.blocks {
-		fmt.Println(i.name, i.parameters)
+		fmt.Println(i.name, i.parameters, i.startPos, i.endPos)
 	}
-	
+
+	fmt.Println("== Components ==")
+	lex.parseComponents()
+	for _, c := range lex.components {
+		fmt.Println(c.String())
+	}
+
+
 	return nil
 }
 
@@ -159,28 +164,18 @@ type Lexicon struct {
 	src        []byte
 	lastAction int
 	actions    []ActionItem
-	blocks     []BlockItem
-	filter     ActionFilter
+	blocks     Blocks
+	components []Component
 }
 
-func (l *Lexicon) parse(filter ActionFilter) {
-	l.filter = filter
-	if l.filter == nil {
-		l.filter = ActionFilter{
-			ComponentAction, SlotAction,
-			IfAction, RangeAction, WithAction,
-			BlockAction, DefineAction, ElseAction,
-			EndAction, OtherAction,
-		}
-
-	}
+func (l *Lexicon) parse() {
 	l.parseActions()
-	l.parseBlocks(0)
 }
 
 func (l *Lexicon) parseActions() {
 	locations := lexAction.FindAllSubmatchIndex(l.src, -1)
 	l.actions = make([]ActionItem, 0)
+	actionBlocks := make([]*ActionItem, 0)
 
 	for i := l.lastAction; i < len(locations); i++ {
 		loc := locations[i]
@@ -190,9 +185,11 @@ func (l *Lexicon) parseActions() {
 		action.endPos = loc[1]
 		action.src = l.src[loc[0]:loc[1]]
 		action.name = strings.TrimSpace(string(l.src[loc[2]:loc[3]]))
+
 		if action.Type() != ElseAction && action.Type() != EndAction {
 			if action.Type() != OtherAction {
 				action.tokenType = ActionTypeBlockStart
+				actionBlocks = append(actionBlocks, &action)
 			} else {
 				action.tokenType = ActionTypeSingle
 			}
@@ -200,6 +197,24 @@ func (l *Lexicon) parseActions() {
 			action.tokenType = ActionTypeBlockElse
 		} else {
 			action.tokenType = ActionTypeBlockEnd
+			if len(actionBlocks) != 0 {
+				var act *ActionItem
+				// pop last item in actionBlocks
+				act, actionBlocks = actionBlocks[len(actionBlocks)-1], actionBlocks[:len(actionBlocks)-1]
+
+				blk := Block{
+					name:         act.name,
+					parameters:   act.parameters,
+					blockType:    act.Type(),
+					startPos:     act.startPos,
+					endPos:       action.endPos,
+					content:      l.src[act.endPos:action.startPos],
+					contentStart: act.endPos,
+					contentEnd:   action.startPos,
+				}
+				blk.src = l.src[blk.startPos:blk.endPos]
+				l.blocks = append(l.blocks, blk)
+			}
 		}
 
 		if len(loc) > 3 {
@@ -207,56 +222,99 @@ func (l *Lexicon) parseActions() {
 		}
 
 		l.actions = append(l.actions, action)
-		// fmt.Println(i, ":", action.name, action.Type().String(), action.tokenType.String())
+		fmt.Println(i, ":", action.name, action.tokenType.String(), action.parameters)
 	}
 }
 
-func (l *Lexicon) parseBlocks(idx int) int {
-	foundBlkStart := -1
-	for i := idx; i < len(l.actions); i++ {
-		a := l.actions[i]
 
-		if a.tokenType == ActionTypeSingle || a.tokenType == ActionTypeBlockElse {
+type Component struct {
+	*Block
+	children []Component
+}
+
+func (c Component) String() string {
+	retv := strings.Builder{}
+	retv.WriteString(fmt.Sprintln(c.name, "(", c.parameters, ")","{[", c.startPos,"]"))
+	for _, s := range c.children {
+		retv.WriteString(fmt.Sprintln("\t", s.name, s.parameters, s.startPos, s.endPos, len(s.children)))
+		for _, t := range s.children {
+			retv.WriteString("\t"+t.String())
+		}
+	}
+	retv.WriteString(fmt.Sprintln("[", c.endPos,"]}"))
+	
+	return retv.String()
+}
+
+func (l *Lexicon) parseComponents() {
+	for i := len(l.blocks)-1; i >= 0 ; i-- {
+		b := l.blocks[i]
+		if b.blockType == ComponentAction {
+			c := Component{
+				Block:    &b,
+				children: make([]Component, 0),
+			}
+			
+			parent := l.FindParentBlock(&b)
+			if parent == nil {
+				// only top level components are stored in l.components
+				l.components = append(l.components, c)
+			} else {
+				parent := l.FindComponentParent(&c, l.components)
+				parent.children = append(c.children, c)
+			} 
+			
 			continue
 		}
 
-		if a.tokenType == ActionTypeBlockStart {
-			if foundBlkStart != -1 {
-				// found another blockStart while in a block
-				i = l.parseBlocks(i)
+		if b.blockType == SlotAction {
+			c := Component{
+				Block:    &b,
+				children: make([]Component, 0),
+			}
+			parent := l.FindParentComponent(&c)
+			if parent == nil {
 				continue
 			}
-
-			foundBlkStart = i
-			continue
+			
+			parent.children = append(parent.children, c)
 		}
+	}
+}
 
-		if a.tokenType == ActionTypeBlockEnd {
-			act := l.actions[foundBlkStart]
-			blk := BlockItem{
-				name:       act.name,
-				parameters: act.parameters,
-				startPos:   act.startPos,
-				endPos:     a.endPos,
-				content:    l.src[act.endPos:a.startPos],
-				contentStart: act.endPos,
-				contentEnd: a.startPos,
-			}
+func (l *Lexicon) FindParentBlock(b *Block) (parent *Block) {
+	for i := 0; i < len(l.blocks); i++ {
+		parent = &l.blocks[i]
+		if b.startPos > parent.startPos  && b.endPos > parent.startPos && b.endPos < parent.endPos {
+			return 
+		} 
+	}
+	
+	return nil
+}
 
-			blk.src = l.src[blk.startPos:blk.endPos]
-			foundBlkStart = -1
-
-			if l.filter.Includes(act.Type()) {
-				l.blocks = append(l.blocks, blk)
-				// fmt.Println(blk)
-			}
-
-			if idx != 0 {
-				// exit recursion
-				return i
-			}
+func (l *Lexicon) FindParentComponent(c *Component) (parent *Component) {
+	for i := 0; i < len(l.components); i++ {
+		parent = &l.components[i]
+		if c.startPos > parent.startPos  && c.endPos > parent.startPos && c.endPos < parent.endPos {
+			return
 		}
 	}
 
-	return len(l.actions) - 1
+	return nil
+}
+
+func (l *Lexicon) FindComponentParent(b *Component, list []Component) (parent *Component) {
+	for i := 0; i < len(list); i++ {
+		candidate := &l.components[i]
+		if b.startPos > candidate.startPos  && b.endPos > candidate.startPos && b.endPos < candidate.endPos {
+			return candidate
+		} 
+		
+		if len(candidate.children) > 0 {
+			return l.FindComponentParent(b, candidate.children)
+		}
+	}
+
+	return nil
 }
