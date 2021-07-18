@@ -25,6 +25,17 @@ such as the button/click pair above, by omitting the event name:
 		{{end}}
 	{{end}}
 {{end}}
+
+{{#component "table" id}}
+
+{{#slot "tab1" table}}
+tab 1
+{{end}}
+
+{{#slot "tab2" table}}
+tab 2
+{{end}}
+{{end}}
 `
 
 /*

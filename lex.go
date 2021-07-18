@@ -165,7 +165,7 @@ type Lexicon struct {
 	lastAction int
 	actions    []ActionItem
 	blocks     Blocks
-	components []Component
+	components []*Component
 }
 
 func (l *Lexicon) parse() {
@@ -229,55 +229,69 @@ func (l *Lexicon) parseActions() {
 
 type Component struct {
 	*Block
-	children []Component
+	children []*Component
 }
 
-func (c Component) String() string {
+func (c Component) String(depth ...int) string {
+	d := 0
+	if len(depth) > 0 {
+		d = depth[0]
+	}
+	
 	retv := strings.Builder{}
-	retv.WriteString(fmt.Sprintln(c.name, "(", c.parameters, ")","{[", c.startPos,"]"))
+	retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d), c.name, "(", c.parameters, ")","{[", c.startPos,"]"))
 	for _, s := range c.children {
-		retv.WriteString(fmt.Sprintln("\t", s.name, s.parameters, s.startPos, s.endPos, len(s.children)))
+		retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d+1), s.name, s.parameters, s.startPos, s.endPos, len(s.children)))
 		for _, t := range s.children {
-			retv.WriteString("\t"+t.String())
+			retv.WriteString(strings.Repeat("\t\t",d)+t.String(d+1))
 		}
 	}
-	retv.WriteString(fmt.Sprintln("[", c.endPos,"]}"))
+	retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d), "[", c.endPos,"]}"))
 	
 	return retv.String()
 }
 
 func (l *Lexicon) parseComponents() {
+	components := make([]*Component, 0)
 	for i := len(l.blocks)-1; i >= 0 ; i-- {
 		b := l.blocks[i]
 		if b.blockType == ComponentAction {
-			c := Component{
+			c := &Component{
 				Block:    &b,
-				children: make([]Component, 0),
+				children: make([]*Component, 0),
 			}
+			components = append(components, c)
 			
-			parent := l.FindParentBlock(&b)
-			if parent == nil {
-				// only top level components are stored in l.components
-				l.components = append(l.components, c)
-			} else {
-				parent := l.FindComponentParent(&c, l.components)
-				parent.children = append(c.children, c)
+			bParent := l.FindParentBlock(&b)
+			if bParent != nil {
+				parent := l.FindMatchingComponent(bParent, components)
+				if parent != nil {
+					parent.children = append(parent.children, c)
+					continue
+				} 
 			} 
 			
+			l.components = append(l.components, c)
 			continue
 		}
 
 		if b.blockType == SlotAction {
-			c := Component{
+			c := &Component{
 				Block:    &b,
-				children: make([]Component, 0),
+				children: make([]*Component, 0),
 			}
-			parent := l.FindParentComponent(&c)
-			if parent == nil {
-				continue
+			components = append(components, c)
+
+			bParent := l.FindParentBlock(&b)
+			if bParent != nil {
+				parent := l.FindMatchingComponent(bParent, components)
+				if parent != nil {
+					parent.children = append(parent.children, c)
+					continue
+				}
 			}
-			
-			parent.children = append(parent.children, c)
+
+			continue
 		}
 	}
 }
@@ -295,7 +309,7 @@ func (l *Lexicon) FindParentBlock(b *Block) (parent *Block) {
 
 func (l *Lexicon) FindParentComponent(c *Component) (parent *Component) {
 	for i := 0; i < len(l.components); i++ {
-		parent = &l.components[i]
+		parent = l.components[i]
 		if c.startPos > parent.startPos  && c.endPos > parent.startPos && c.endPos < parent.endPos {
 			return
 		}
@@ -304,15 +318,11 @@ func (l *Lexicon) FindParentComponent(c *Component) (parent *Component) {
 	return nil
 }
 
-func (l *Lexicon) FindComponentParent(b *Component, list []Component) (parent *Component) {
-	for i := 0; i < len(list); i++ {
-		candidate := &l.components[i]
-		if b.startPos > candidate.startPos  && b.endPos > candidate.startPos && b.endPos < candidate.endPos {
-			return candidate
-		} 
-		
-		if len(candidate.children) > 0 {
-			return l.FindComponentParent(b, candidate.children)
+func (l *Lexicon) FindMatchingComponent(b *Block, list []*Component) *Component {
+	
+	for _, c := range list {
+		if b.startPos == c.startPos  && b.endPos == c.endPos {
+				return c
 		}
 	}
 

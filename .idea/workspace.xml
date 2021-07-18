@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/debug/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/debug/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lex.go" beforeDir="false" afterPath="$PROJECT_DIR$/lex.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/template.go" beforeDir="false" afterPath="$PROJECT_DIR$/template.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,6 +28,9 @@
   </component>
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
+  </component>
+  <component name="GoVcsConfiguration">
+    <option name="GO_FMT" value="false" />
   </component>
   <component name="ProjectId" id="1vRYFV10WDeOX8TYL2v7eUarOpk" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -87,6 +89,12 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="wip: parse components" />
+    <option name="LAST_COMMIT_MESSAGE" value="wip: parse components" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
