@@ -12,7 +12,7 @@ such as the button/click pair above, by omitting the event name:
 
 <button data-action="gallery#next">…</button>
 
-{{#component "card" id}}
+{{#component "card"}}
 	Hello World
 	{{#slot "header" card}}Title{{end}}
 
@@ -26,15 +26,14 @@ such as the button/click pair above, by omitting the event name:
 	{{end}}
 {{end}}
 
-{{#component "table" id}}
-
-{{#slot "tab1" table}}
-tab 1
-{{end}}
-
-{{#slot "tab2" table}}
-tab 2
-{{end}}
+{{#component "table"}}
+	{{#slot "tab1" table}}
+		tab 1
+	{{end}}
+	
+	{{#slot "tab2" table}}
+		tab 2
+	{{end}}
 {{end}}
 `
 
@@ -52,7 +51,9 @@ tab 2
 
 func main() {
 	println(tplSource)
-	err := xtemplate.Transform([]byte(tplSource))
+	// err := xtemplate.Transform([]byte(tplSource))
+	doc := xtemplate.Document(tplSource)
+	err := xtemplate.TransformComponents(&doc, "./samples", "tmpl")
 	if err != nil {
 		fmt.Println(err)
 		return

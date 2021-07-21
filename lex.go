@@ -133,6 +133,19 @@ func (b Block) String() string {
 	return fmt.Sprint(b.name, "(", b.parameters, " ) :", string(b.content))
 }
 
+func (b Block) localStartPos() int {
+	return 0
+}
+func (b Block) localEndPos() int {
+	return b.endPos - b.startPos
+}
+func (b Block) localContentStart() int {
+	return b.contentStart - b.startPos
+}
+func (b Block) localContentEnd() int {
+	return b.contentEnd - b.startPos
+}
+
 func (i ActionItem) Type() ActionType {
 	return StrToAction(i.name)
 }
@@ -154,7 +167,7 @@ func Transform(content []byte) error {
 	for _, c := range lex.components {
 		fmt.Println(c.String())
 	}
-
+	
 
 	return nil
 }
@@ -170,6 +183,7 @@ type Lexicon struct {
 
 func (l *Lexicon) parse() {
 	l.parseActions()
+	l.parseComponents()
 }
 
 func (l *Lexicon) parseActions() {
@@ -222,7 +236,7 @@ func (l *Lexicon) parseActions() {
 		}
 
 		l.actions = append(l.actions, action)
-		fmt.Println(i, ":", action.name, action.tokenType.String(), action.parameters)
+		// fmt.Println(i, ":", action.name, action.tokenType.String(), action.parameters)
 	}
 }
 
@@ -230,6 +244,7 @@ func (l *Lexicon) parseActions() {
 type Component struct {
 	*Block
 	children []*Component
+	id int
 }
 
 func (c Component) String(depth ...int) string {
@@ -239,9 +254,9 @@ func (c Component) String(depth ...int) string {
 	}
 	
 	retv := strings.Builder{}
-	retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d), c.name, "(", c.parameters, ")","{[", c.startPos,"]"))
+	retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d), c.id, ":",  c.name, "(", c.parameters, ")","{[", c.startPos,"]"))
 	for _, s := range c.children {
-		retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d+1), s.name, s.parameters, s.startPos, s.endPos, len(s.children)))
+		retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d+1), s.id, ":", s.name, s.parameters, s.startPos, s.endPos, len(s.children)))
 		for _, t := range s.children {
 			retv.WriteString(strings.Repeat("\t\t",d)+t.String(d+1))
 		}
@@ -261,6 +276,7 @@ func (l *Lexicon) parseComponents() {
 				children: make([]*Component, 0),
 			}
 			components = append(components, c)
+			c.id = len(components)
 			
 			bParent := l.FindParentBlock(&b)
 			if bParent != nil {
@@ -281,7 +297,8 @@ func (l *Lexicon) parseComponents() {
 				children: make([]*Component, 0),
 			}
 			components = append(components, c)
-
+			c.id = len(components)
+			
 			bParent := l.FindParentBlock(&b)
 			if bParent != nil {
 				parent := l.FindMatchingComponent(bParent, components)
