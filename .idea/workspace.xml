@@ -5,15 +5,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/component.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/.editorconfig" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/component.go" beforeDir="false" afterPath="$PROJECT_DIR$/component.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/debug/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/debug/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lex.go" beforeDir="false" afterPath="$PROJECT_DIR$/lex.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/_components/card.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/card.tmpl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/_components/table.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/table.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EditorConfigPreviewManager">
+    <editorConfig file="$PROJECT_DIR$/.editorconfig" previewFile="$PROJECT_DIR$/samples/_components/table.tmpl" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" url="file:///usr/local/go" />
   <component name="Git.Settings">
@@ -34,7 +49,9 @@
     <option name="GO_FMT" value="false" />
   </component>
   <component name="ProjectId" id="1vRYFV10WDeOX8TYL2v7eUarOpk" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="false" />
@@ -44,6 +61,9 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="configurable..is.expanded" value="false" />
+    <property name="configurable.GoLibrariesConfigurable.is.expanded" value="true" />
+    <property name="format.on.save" value="true" />
     <property name="go.formatter.settings.were.checked" value="true" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.modules.go.list.on.any.changes.was.set" value="true" />
@@ -53,7 +73,7 @@
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.appearance" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -61,18 +81,86 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager">
-    <configuration name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Go Test.TestLexicon_ParseComponents in github.com/mayowa/xtemplate">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="FILE" />
       <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$/debug/main.go" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestBlock_UpdateParameters in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestBlock_UpdateParameters\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestLexicon_ParseActions in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestLexicon_ParseActions\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestLexicon_ParseComponents in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestLexicon_ParseComponents\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestLexicon_transformDefineToTemplate in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestLexicon_transformDefineToTemplate\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestLexicon_transformSubcomponentCall in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestLexicon_transformSubcomponentCall\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Build.go build main.go" />
+        <item itemvalue="Go Test.TestLexicon_ParseComponents in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestLexicon_ParseActions in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestLexicon_transformSubcomponentCall in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestLexicon_transformDefineToTemplate in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestBlock_UpdateParameters in github.com/mayowa/xtemplate" />
       </list>
     </recent_temporary>
   </component>
@@ -95,18 +183,18 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/component.go</url>
-          <line>164</line>
+          <line>175</line>
           <option name="timeStamp" value="21" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/component.go</url>
-          <line>161</line>
+          <line>172</line>
           <option name="timeStamp" value="22" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/component.go</url>
-          <line>87</line>
-          <option name="timeStamp" value="23" />
+          <url>file://$PROJECT_DIR$/lex_test.go</url>
+          <line>105</line>
+          <option name="timeStamp" value="31" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

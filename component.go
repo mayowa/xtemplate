@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	
+	"github.com/jinzhu/copier"
 )
 
 var cmpBlockStart = regexp.MustCompile(`{{-*\s*([#\w]+)\s+"([\w.]*?)"[\s\w".$]*?\s*-*}}`)
@@ -24,15 +26,13 @@ func init() {
 
 func TransformComponents(content *Document, componentFolder, ext string) error {
 	componentFolder = filepath.Join(componentFolder, "_components")
-
+	
 	lex := Lexicon{src: *content}
-	// lex.parse(ActionFilter{ComponentAction, SlotAction})
-	lex.parseActions()
-	lex.parseComponents()
+	lex.ParseComponents()
+	
 	for _, c := range lex.components {
-		fmt.Println(c.String(), "\n", "== debug ==")
-
-		cName := getComponentName(c.parameters)
+		
+		cName := getComponentName(c)
 		if cName == "" {
 			// component has no parameters (its malformed), cut it out
 			content.Cut(c.startPos, c.endPos)
@@ -44,88 +44,99 @@ func TransformComponents(content *Document, componentFolder, ext string) error {
 			content.Cut(c.startPos, c.endPos)
 			continue
 		}
-		tComponent := cTpl.Lex.components[0]
-
+		
 		buff := bytes.NewBuffer([]byte{})
-		for _, slot := range c.children {
-			if slot.blockType != SlotAction {
-				// only slots are processed other content/tags are ignored
-				continue
-			}
-
-			// get matching slot from the component template
-			sName := getComponentName(slot.parameters)
-			tSlot := findSlotByName(sName, tComponent)
-			if tSlot == nil {
-				// slot not found in component template
-				continue
-			}
-
-			// #slot
-			txc := transformSlotToDefine(cName, c.id, slot, tSlot)
-			buff.Write(txc)
-			fmt.Println(buff.String())
-
-		}
-
-		fmt.Println("\n", "=======")
+		out := transformComponentBlock(cName, c, cTpl)
+		buff.Write(out)
+		
+		fmt.Println(c.String(), "\n", "== debug ==")
+		fmt.Println(buff.String())
+		fmt.Println("\n", "== end ==")
 	}
-
+	
 	return nil
 }
 
-func getComponentHeader(c *Component) []byte {
-	return c.src[c.localStartPos():c.localContentStart()]
-}
-
-func transformSlotToDefine(cName string, id int, slot, tSlot *Component) []byte {
-	/*
-		{{#slot "header" .}}   			{{define "component_card_1_header" .}}
-			Hello Header       -->			Hello Header
-		{{end}}											{{end}}
-	*/
-
-	out := bytes.NewBufferString("")
-	header := Document(tSlot.src[tSlot.localStartPos():tSlot.localContentStart()])
-	parts := cmpBlockStart.FindSubmatch(header)
-	
-	newName := fmt.Sprintf("component_%s_%d_%s", cName,  id, string(parts[2]))
-	newHeader := fmt.Sprintf(`{{define "%s"}}`, newName)
-	out.WriteString(newHeader)
-	
-	// slot.content -> tSlot.content
-	if slot != nil {
-		out.Write(slot.content)
-	} else {
-		out.Write(tSlot.content)
-	}
-	out.WriteString("{{end}}")
-
-	return out.Bytes()
-}
-
-func findSlotByName(name string, component *Component) *Component {
-	if component == nil {
+func transformComponentBlock(cName string, c *Component, cTpl *ComponentTemplate) []byte {
+	// make a copy of the template lexicon
+	lex := Lexicon{}
+	err := copier.CopyWithOption(&lex, cTpl.Lex, copier.Option{DeepCopy: true})
+	if err != nil {
 		return nil
 	}
-
-	for _, s := range component.children {
-		sName := getComponentName(s.parameters)
-		if sName == name {
-			return s
+	tc := lex.components[0]
+	
+	// make a copy of the component
+	// wc := Component{}
+	// err = copier.CopyWithOption(&wc, c, copier.Option{DeepCopy: true})
+	// if err != nil {
+	// 	return nil
+	// }	
+	
+	newName := fmt.Sprint("\"", "component__", c.id, "__", cName, "\"")
+	tc.UpdateParameters(newName)
+	
+	for _, slot := range tc.children {
+		if slot.blockType != SlotAction {
+			continue
+		}
+		
+		oldName := getComponentName(slot)
+		newName := fmt.Sprint("\"", "slot__", c.id, "__", oldName, "\"")
+		slot.UpdateParameters(newName)
+		delete(tc.childMap, oldName)
+		tc.childMap[newName] = slot
+		
+		cSlot, exists := c.childMap[oldName]
+		if exists {
+			slot.UpdateContent(cSlot.content)
+			
+			// transform {{define "component--xxx"}} ... {{end}} to {{template "component__n__xxx" .}}
+			retv := transformSubcomponentCall(slot)
+			if retv == nil {
+				continue
+			}
+			slot.UpdateContent(retv)
 		}
 	}
-
-	return nil
+	
+	return tc.src
 }
 
-func getComponentName(params string) string {
-	p := strings.Split(strings.TrimSpace(params), " ")
+func transformSubcomponentCall(c *Component) []byte {
+	lex := Lexicon{src: c.content}
+	lex.ParseComponents()
+	if len(lex.components) == 0 {
+		return nil
+	}
+	
+	for i := 0; i < len(lex.components); i++ {
+		sc := lex.components[i]
+		cc := findComponentByParameter(sc.parameters, c.children)
+		if cc == nil {
+			continue
+		}
+		
+		newTrx := fmt.Sprint("{{template \"component__", cc.id, "__", getComponentName(sc), "\" .}}")
+		c.Replace(sc.src, []byte(newTrx))
+	}
+	
+	return c.src
+}
+
+func getComponentName(c *Component) string {
+	p := strings.Split(strings.TrimSpace(c.parameters), " ")
 	if len(p) == 0 {
 		return ""
 	}
-
-	return stripQuotes(p[0])
+	
+	retv := stripQuotes(p[0])
+	p = strings.Split(retv, "--")
+	if len(p) < 2 {
+		return ""
+	}
+	
+	return p[1]
 }
 
 func getComponentTpl(cName string, componentFolder string) (*ComponentTemplate, error) {
@@ -137,14 +148,14 @@ func getComponentTpl(cName string, componentFolder string) (*ComponentTemplate, 
 			// Todo: log error
 			return nil, err
 		}
-
+		
 		ct = &ComponentTemplate{Name: cName}
 		ct.Lex.src = content
-		ct.Lex.parse()
-
+		ct.Lex.Parse()
+		
 		components[cName] = ct
 	}
-
+	
 	return ct, nil
 }
 
@@ -160,12 +171,12 @@ func (d *Document) Cut(start, end int) {
 
 func (d *Document) CutAndInsert(start, end int, data []byte) {
 	d.Cut(start, end)
-
+	
 	// grow to accommodate new data if required
 	if end-start < len(data) {
 		*d = append(*d, make(Document, len(data))...)
 	}
-
+	
 	otherHalf := (*d)[end:]
 	// insert data
 	copy((*d)[start+1:], data)

@@ -1,12 +1,15 @@
 package xtemplate
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
 )
 
-var lexAction = regexp.MustCompile(`{{-*\s*([#\w]+)([\s\w".$]*?)\s*-*}}`)
+var lexAction = regexp.MustCompile(`{{-*\s*([#\w]+)\s?([\s\w"-.$:=]*?)\s*-*}}`)
+var lexComponentPrefix = regexp.MustCompile(`(?mi)"component--`)
+var lexSlotPrefix = regexp.MustCompile(`(?mi)"slot--`)
 
 type ActionType int
 
@@ -38,7 +41,7 @@ func (a ActionType) String() string {
 	return str
 }
 
-func StrToAction(val string) ActionType {
+func StrToBaseAction(val string) ActionType {
 	var action ActionType
 	switch val {
 	case "#component":
@@ -123,7 +126,8 @@ type Block struct {
 }
 
 type Blocks []Block
-func (b *Blocks) Len() int      {return  len(*b)}
+
+func (b *Blocks) Len() int      { return len(*b) }
 func (b *Blocks) Swap(i, j int) { (*b)[i], (*b)[j] = (*b)[j], (*b)[i] }
 func (b *Blocks) Less(i, j int) bool {
 	return (*b)[i].endPos < (*b)[j].endPos
@@ -146,30 +150,63 @@ func (b Block) localContentEnd() int {
 	return b.contentEnd - b.startPos
 }
 
-func (i ActionItem) Type() ActionType {
-	return StrToAction(i.name)
+func (b *Block) UpdateParameters(val string) {
+	b.Replace([]byte(b.parameters), []byte(val))
+	b.parameters = val
 }
 
-func Transform(content []byte) error {
-	lex := Lexicon{
-		src: content,
+func (b *Block) UpdateContent(new []byte) {
+	b.Replace(b.content, new)
+}
+
+func (b *Block) Replace(old, new []byte) {
+	// find position of snippet to replace
+	idx := bytes.Index(b.src, old)
+	if idx == -1 {
+		return
 	}
 
-	// lex.parse(ActionFilter{ComponentAction, SlotAction})
-	lex.parseActions()
-	fmt.Println("== Blocks ==")
-	for _, i := range lex.blocks {
-		fmt.Println(i.name, i.parameters, i.startPos, i.endPos)
+	oldLen := len(old)
+	newLen := len(new)
+	diff := oldLen - newLen
+	if diff < 0 {
+		diff *= -1
 	}
 
-	fmt.Println("== Components ==")
-	lex.parseComponents()
-	for _, c := range lex.components {
-		fmt.Println(c.String())
-	}
-	
+	b.src = bytes.Replace(b.src, old, new, 1)
 
-	return nil
+	if idx < b.localContentStart() {
+		if oldLen < newLen {
+			b.endPos += diff
+			b.contentStart += diff
+			b.contentEnd += diff
+		} else if oldLen > newLen {
+			b.endPos -= diff
+			b.contentStart -= diff
+			b.contentEnd -= diff
+		}
+	} else {
+		if oldLen < newLen {
+			b.contentEnd += diff
+		} else if oldLen > newLen {
+			b.contentEnd -= diff
+		}
+	}
+
+	b.content = b.src[b.localContentStart():b.localContentEnd()]
+}
+
+func (i ActionItem) Type() ActionType {
+	at := StrToBaseAction(i.name)
+	if i.tokenType == ActionTypeBlockStart {
+		if at == DefineAction && lexComponentPrefix.Find([]byte(i.parameters)) != nil {
+			return ComponentAction
+		} else if at == BlockAction && lexSlotPrefix.Find([]byte(i.parameters)) != nil {
+			return SlotAction
+		}
+	}
+
+	return at
 }
 
 type Lexicon struct {
@@ -181,17 +218,16 @@ type Lexicon struct {
 	components []*Component
 }
 
-func (l *Lexicon) parse() {
-	l.parseActions()
-	l.parseComponents()
+func (l *Lexicon) Parse() {
+	l.ParseComponents()
 }
 
-func (l *Lexicon) parseActions() {
+func (l *Lexicon) ParseActions() {
 	locations := lexAction.FindAllSubmatchIndex(l.src, -1)
 	l.actions = make([]ActionItem, 0)
 	actionBlocks := make([]*ActionItem, 0)
 
-	for i := l.lastAction; i < len(locations); i++ {
+	for i := 0; i < len(locations); i++ {
 		loc := locations[i]
 		action := ActionItem{}
 
@@ -240,11 +276,12 @@ func (l *Lexicon) parseActions() {
 	}
 }
 
-
 type Component struct {
 	*Block
 	children []*Component
-	id int
+	childMap map[string]*Component
+	id       int
+	isChild  bool
 }
 
 func (c Component) String(depth ...int) string {
@@ -252,41 +289,50 @@ func (c Component) String(depth ...int) string {
 	if len(depth) > 0 {
 		d = depth[0]
 	}
-	
+
 	retv := strings.Builder{}
-	retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d), c.id, ":",  c.name, "(", c.parameters, ")","{[", c.startPos,"]"))
+	retv.WriteString(fmt.Sprintln(strings.Repeat("\t", d), c.id, ":", c.name, "(", c.parameters, ")", "{[", c.startPos, "]"))
 	for _, s := range c.children {
-		retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d+1), s.id, ":", s.name, s.parameters, s.startPos, s.endPos, len(s.children)))
+		retv.WriteString(fmt.Sprintln(strings.Repeat("\t", d+1), s.id, ":", s.name, s.parameters, s.startPos, s.endPos, len(s.children)))
 		for _, t := range s.children {
-			retv.WriteString(strings.Repeat("\t\t",d)+t.String(d+1))
+			retv.WriteString(strings.Repeat("\t\t", d) + t.String(d+1))
 		}
 	}
-	retv.WriteString(fmt.Sprintln(strings.Repeat("\t",d), "[", c.endPos,"]}"))
-	
+	retv.WriteString(fmt.Sprintln(strings.Repeat("\t", d), "[", c.endPos, "]}"))
+
 	return retv.String()
 }
 
-func (l *Lexicon) parseComponents() {
+func (l *Lexicon) ParseComponents() {
+	if len(l.blocks) == 0 {
+		// src hasn't been parsed
+		l.ParseActions()
+	}
+
 	components := make([]*Component, 0)
-	for i := len(l.blocks)-1; i >= 0 ; i-- {
+	for i := len(l.blocks) - 1; i >= 0; i-- {
 		b := l.blocks[i]
 		if b.blockType == ComponentAction {
 			c := &Component{
 				Block:    &b,
 				children: make([]*Component, 0),
+				childMap: make(map[string]*Component),
 			}
 			components = append(components, c)
 			c.id = len(components)
-			
-			bParent := l.FindParentBlock(&b)
+			c.parameters = strings.ToLower(c.parameters)
+
+			bParent := l.findParentBlock(&b)
 			if bParent != nil {
-				parent := l.FindMatchingComponent(bParent, components)
+				parent := l.findMatchingComponent(bParent, components)
 				if parent != nil {
 					parent.children = append(parent.children, c)
-					continue
-				} 
-			} 
-			
+					c.isChild = true
+					name := getComponentName(c)
+					parent.childMap[name] = c
+				}
+			}
+
 			l.components = append(l.components, c)
 			continue
 		}
@@ -295,39 +341,31 @@ func (l *Lexicon) parseComponents() {
 			c := &Component{
 				Block:    &b,
 				children: make([]*Component, 0),
+				childMap: make(map[string]*Component),
 			}
 			components = append(components, c)
 			c.id = len(components)
-			
-			bParent := l.FindParentBlock(&b)
+			c.parameters = strings.ToLower(c.parameters)
+
+			bParent := l.findParentBlock(&b)
 			if bParent != nil {
-				parent := l.FindMatchingComponent(bParent, components)
+				parent := l.findMatchingComponent(bParent, components)
 				if parent != nil {
 					parent.children = append(parent.children, c)
+					name := getComponentName(c)
+					parent.childMap[name] = c
 					continue
 				}
 			}
-
 			continue
 		}
 	}
 }
 
-func (l *Lexicon) FindParentBlock(b *Block) (parent *Block) {
+func (l *Lexicon) findParentBlock(b *Block) (parent *Block) {
 	for i := 0; i < len(l.blocks); i++ {
 		parent = &l.blocks[i]
-		if b.startPos > parent.startPos  && b.endPos > parent.startPos && b.endPos < parent.endPos {
-			return 
-		} 
-	}
-	
-	return nil
-}
-
-func (l *Lexicon) FindParentComponent(c *Component) (parent *Component) {
-	for i := 0; i < len(l.components); i++ {
-		parent = l.components[i]
-		if c.startPos > parent.startPos  && c.endPos > parent.startPos && c.endPos < parent.endPos {
+		if b.startPos > parent.startPos && b.endPos > parent.startPos && b.endPos < parent.endPos {
 			return
 		}
 	}
@@ -335,11 +373,47 @@ func (l *Lexicon) FindParentComponent(c *Component) (parent *Component) {
 	return nil
 }
 
-func (l *Lexicon) FindMatchingComponent(b *Block, list []*Component) *Component {
-	
+func (l *Lexicon) findParentComponent(c *Component) (parent *Component) {
+	for i := 0; i < len(l.components); i++ {
+		parent = l.components[i]
+		if c.startPos > parent.startPos && c.endPos > parent.startPos && c.endPos < parent.endPos {
+			return
+		}
+	}
+
+	return nil
+}
+
+func (l *Lexicon) findMatchingComponent(b *Block, list []*Component) *Component {
+
 	for _, c := range list {
-		if b.startPos == c.startPos  && b.endPos == c.endPos {
-				return c
+		if b.startPos == c.startPos && b.endPos == c.endPos {
+			return c
+		}
+	}
+
+	return nil
+}
+
+func (l *Lexicon) findChildComponentByParameter(b *Block) *Component {
+
+	for _, c := range l.components {
+		if !c.isChild {
+			continue
+		}
+		if b.parameters == c.parameters {
+			return c
+		}
+	}
+
+	return nil
+}
+
+func findComponentByParameter(param string, list []*Component) *Component {
+
+	for _, c := range list {
+		if c.parameters == param {
+			return c
 		}
 	}
 
