@@ -5,15 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/.editorconfig" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/component.go" beforeDir="false" afterPath="$PROJECT_DIR$/component.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/debug/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lex.go" beforeDir="false" afterPath="$PROJECT_DIR$/lex.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/_components/card.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/card.tmpl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/_components/table.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/table.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -173,7 +166,8 @@
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="wip: parse components" />
     <MESSAGE value="parse components into a tree" />
-    <option name="LAST_COMMIT_MESSAGE" value="parse components into a tree" />
+    <MESSAGE value="change component/slot definition" />
+    <option name="LAST_COMMIT_MESSAGE" value="change component/slot definition" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -181,16 +175,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/component.go</url>
-          <line>175</line>
-          <option name="timeStamp" value="21" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/component.go</url>
-          <line>172</line>
-          <option name="timeStamp" value="22" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/lex_test.go</url>
           <line>105</line>
