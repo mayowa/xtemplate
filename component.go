@@ -2,13 +2,12 @@ package xtemplate
 
 import (
 	"bytes"
+	"encoding/gob"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/jinzhu/copier"
 )
 
 var cmpBlockStart = regexp.MustCompile(`{{-*\s*([#\w]+)\s+"([\w.]*?)"[\s\w".$]*?\s*-*}}`)
@@ -29,6 +28,21 @@ type Transformer struct {
 	components         []*Component
 	componentFolder    string
 	fileExt            string
+	lex                *Lexicon
+}
+
+func NewTransformer(content *Document, templateFolder, ext string) *Transformer {
+	t := new(Transformer)
+	t.componentTemplates = make(map[string]*ComponentTemplate)
+	t.componentFolder = filepath.Join(templateFolder, "_components")
+	t.fileExt = ext
+
+	lex := Lexicon{src: *content}
+	lex.ParseComponents()
+	t.lex = &lex
+	t.components = lex.components
+
+	return t
 }
 
 func (t *Transformer) TransformComponents(content *Document, componentFolder, ext string) error {
@@ -39,11 +53,7 @@ func (t *Transformer) TransformComponents(content *Document, componentFolder, ex
 	t.componentFolder = filepath.Join(componentFolder, "_components")
 	t.fileExt = ext
 
-	lex := Lexicon{src: *content}
-	lex.ParseComponents()
-	t.components = lex.components
-
-	for _, c := range lex.components {
+	for _, c := range t.components {
 		cName := getComponentName(c)
 		if cName == "" {
 			// component has no parameters (its malformed), cut it out
@@ -70,20 +80,10 @@ func (t *Transformer) TransformComponents(content *Document, componentFolder, ex
 }
 
 func (t *Transformer) transformComponentBlock(cName string, c *Component, cTpl *ComponentTemplate, isChild bool) []byte {
-	// make a copy of the template lexicon
-	lex := Lexicon{}
-	err := copier.CopyWithOption(&lex, cTpl.Lex, copier.Option{DeepCopy: true})
-	if err != nil {
-		return nil
-	}
-	tc := lex.components[0]
-
+	// make a copy of the template component
+	tc := cTpl.Lex.components[0].Clone()
 	// make a copy of the component. (Do NOT modify the source component c *Component)
-	wc := Component{}
-	err = copier.CopyWithOption(&wc, c, copier.Option{DeepCopy: true})
-	if err != nil {
-		return nil
-	}
+	wc := c.Clone()
 
 	// update component name
 	if !isChild {
@@ -103,20 +103,28 @@ func (t *Transformer) transformComponentBlock(cName string, c *Component, cTpl *
 
 		// rename child slot
 		slotName := getComponentName(slot)
-		name := fmt.Sprintf(`"%s__%d__%s"`, cName, c.id, slotName)
-		slot.UpdateParameters(name + " .")
+		param := fmt.Sprintf(`"%s__%d__%s" .`, cName, c.id, slotName)
+
+		tc.Replace([]byte(slot.parameters), []byte(param))
+		slot.UpdateParameters(param)
 
 		// update slot content
 		cSlot, exists := c.childMap[slotName]
 		if exists {
+			oldSrc := slot.src[:]
 			slot.UpdateContent(cSlot.content)
+			tc.Replace(oldSrc, slot.src)
 		}
-		t.transformSubcomponentCall(slot)
+		oldSrc := slot.src[:]
+		newSrc := t.transformSubcomponentCall(slot)
+		if newSrc != nil {
+			tc.Replace(oldSrc, newSrc)
+		}
 	}
 
 	retv := tc.src
 	if !isChild {
-		tplCall := fmt.Sprintf(`\n {{template "component__%d__%s" .}}\n`, wc.id, cName)
+		tplCall := fmt.Sprintf("\n{{template \"component__%d__%s\" .}}\n", wc.id, cName)
 		retv = append(retv, []byte(tplCall)...)
 	}
 	return retv
@@ -128,6 +136,8 @@ func (t *Transformer) transformSubcomponentCall(c *Component) []byte {
 	if len(lex.components) == 0 {
 		return nil
 	}
+
+	wc := c.Clone()
 
 	for i := 0; i < len(lex.components); i++ {
 		sc := lex.components[i]
@@ -142,10 +152,17 @@ func (t *Transformer) transformSubcomponentCall(c *Component) []byte {
 			return nil
 		}
 
-		newTrx := t.transformComponentBlock(cName, cc, cTpl, true)
+		retv := t.transformComponentBlock(cName, cc, cTpl, true)
+		if retv == nil {
+			continue
+		}
+
+		oldSrc := cc.src
+		cc.Replace(cc.src, retv)
+		wc.Replace(oldSrc, cc.src)
 	}
 
-	return c.src
+	return wc.src
 }
 
 func getComponentName(c *Component) string {
@@ -212,4 +229,13 @@ func (d *Document) CutAndInsert(start, end int, data []byte) {
 
 func (d *Document) Replace(old, new []byte, n int) {
 	*d = bytes.Replace(*d, old, new, n)
+}
+
+func DeepCopy(dst, src interface{}) error {
+	var buffer bytes.Buffer
+	if err := gob.NewEncoder(&buffer).Encode(src); err != nil {
+		return err
+	}
+
+	return gob.NewDecoder(&buffer).Decode(dst)
 }

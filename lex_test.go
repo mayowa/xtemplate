@@ -1,7 +1,6 @@
 package xtemplate
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -108,51 +107,3 @@ func TestBlock_UpdateParameters(t *testing.T) {
 		t.Fatal("content:", string(b.content))
 	}
 }
-
-func TestLexicon_transformSubcomponentCall(t *testing.T) {
-	lex := Lexicon{src: []byte(tplSource)}
-	lex.ParseComponents()
-	if len(lex.components) == 0 {
-		t.Fatalf("parseComponents failed: nothing was parsed")
-	}
-
-	tc := lex.components[0].children[0]
-	retv := transformSubcomponentCall(tc)
-	if retv == nil {
-		t.Fatal("transformSubcomponentCall returned nil (expecting value)")
-	}
-
-	// t.Error(string(tc.src))
-	if !strings.Contains(string(tc.content), `{{template "component__3__article" .}}`) {
-		t.Error("cant find expected transform in:", string(tc.content))
-	}
-}
-
-/*func TestLexicon_transformComponentBlock(t *testing.T) {
-	lex := Lexicon{src: []byte(tplSource)}
-	lex.ParseComponents()
-	if len(lex.components) == 0 {
-		t.Fatalf("parseComponents failed: nothing was parsed")
-	}
-
-	tc := lex.components[0]
-	cName := getComponentName(tc)
-	if cName == "" {
-		t.Fatal("cant extract component name")
-	}
-	cTpl, err := getComponentTpl(cName+".tmpl", "./samples/_components")
-	if err != nil {
-		// component template file not found or some other error, cut!
-		t.Fatal("cant get component template")
-
-	}
-	tComponent := cTpl.Lex.components[0]
-
-	retv := transformComponentBlock(cName, tc, tComponent)
-	if retv == nil {
-		t.Fatal("transformSubcomponentCall returned nil (expecting value)")
-	}
-
-	t.Error(string(retv))
-}
-*/

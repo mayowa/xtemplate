@@ -284,6 +284,27 @@ type Component struct {
 	isChild  bool
 }
 
+func (c Component) Clone() *Component {
+	cl := new(Component)
+	*cl = c
+
+	// clone children
+	cl.children = make([]*Component, len(c.children))
+	for i, v := range c.children {
+		cl.children[i] = new(Component)
+		*(cl.children[i]) = *v
+	}
+
+	// clone childMap
+	cl.childMap = make(map[string]*Component)
+	for k, v := range c.childMap {
+		cl.childMap[k] = new(Component)
+		*(cl.childMap[k]) = *v
+	}
+
+	return cl
+}
+
 func (c Component) String(depth ...int) string {
 	d := 0
 	if len(depth) > 0 {
