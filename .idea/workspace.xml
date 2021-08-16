@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/component.go" beforeDir="false" afterPath="$PROJECT_DIR$/component.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lex.go" beforeDir="false" afterPath="$PROJECT_DIR$/lex.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lex_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/lex_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/_components/card.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/card.tmpl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/component_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/component_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,29 +74,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.TestTransformer_transformComponentBlock/test_1 in github.com/mayowa/xtemplate">
-    <configuration name="TestLexicon_ParseActions in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="xtemplate" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/mayowa/xtemplate" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestLexicon_ParseActions\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestLexicon_ParseComponents in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="xtemplate" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/mayowa/xtemplate" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestLexicon_ParseComponents\E$" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Go Test.TestTransformer_transformSubcomponentCall in github.com/mayowa/xtemplate">
     <configuration name="TestTransformer_transformComponentBlock in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
@@ -125,6 +97,28 @@
       <pattern value="^\QTestTransformer_transformComponentBlock\E$/^\Qtest_1\E$" />
       <method v="2" />
     </configuration>
+    <configuration name="TestTransformer_transformComponentBlock/test_2 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestTransformer_transformComponentBlock\E$/^\Qtest_2\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestTransformer_transformSubcomponentCall in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestTransformer_transformSubcomponentCall\E$" />
+      <method v="2" />
+    </configuration>
     <configuration name="TestTransformer_transformSubcomponentCall/test_1 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
@@ -138,11 +132,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.TestTransformer_transformComponentBlock/test_1 in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestTransformer_transformSubcomponentCall in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestTransformer_transformComponentBlock/test_2 in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.TestTransformer_transformComponentBlock in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestTransformer_transformComponentBlock/test_1 in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.TestTransformer_transformSubcomponentCall/test_1 in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.TestLexicon_ParseComponents in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.TestLexicon_ParseActions in github.com/mayowa/xtemplate" />
       </list>
     </recent_temporary>
   </component>
@@ -156,7 +150,8 @@
     <MESSAGE value="wip: parse components" />
     <MESSAGE value="parse components into a tree" />
     <MESSAGE value="change component/slot definition" />
-    <option name="LAST_COMMIT_MESSAGE" value="change component/slot definition" />
+    <MESSAGE value="component.Clone, more  tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="component.Clone, more  tests" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -171,7 +166,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/component_test.go</url>
-          <line>73</line>
+          <line>128</line>
           <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
