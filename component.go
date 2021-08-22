@@ -46,13 +46,6 @@ func NewTransformer(content *Document, templateFolder, ext string) *Transformer 
 }
 
 func (t *Transformer) TransformComponents(content *Document, componentFolder, ext string) error {
-	if t.componentTemplates == nil {
-		t.componentTemplates = make(map[string]*ComponentTemplate)
-	}
-
-	t.componentFolder = filepath.Join(componentFolder, "_components")
-	t.fileExt = ext
-
 	for _, c := range t.components {
 		cName := getComponentName(c)
 		if cName == "" {
