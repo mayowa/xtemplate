@@ -440,3 +440,8 @@ func findComponentByParameter(param string, list []*Component) *Component {
 
 	return nil
 }
+
+// stub
+func getComponentName(c *Component) string {
+	return ""
+}

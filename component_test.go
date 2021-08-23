@@ -1,136 +1,119 @@
 package xtemplate
 
-import (
-	"testing"
+import "testing"
 
-	"github.com/andreyvit/diff"
-)
-
-func TestTransformer_transformComponentBlock(t *testing.T) {
+func Test_findTag(t *testing.T) {
+	var source = []byte(`
+<div>
+	<component id="card">
+		<p>
+		<slot Name="body">
+			<component id="article">inner</component>
+		</slot>
+	</component>
+</div>
+`)
 
 	tests := []struct {
-		name     string
-		source   []byte
-		expected []byte
+		name    string
+		tag     string
+		id      string
+		tname   string
+		wantErr bool
 	}{
-		{
-			name: "test 1",
-			source: []byte(`
-			{{define "component--card"}}
-				{{block "slot--header" .}}Title{{end}}
-			{{end}}			
-			`),
-			expected: []byte(`
-			{{define "component__1__card" }}
-			  <div class="card">
-			    <div class="card__header">
-			    {{block "card__1__header" .}}Title{{end}}
-			    </div>
-			    <div class="card_body">
-			    {{block "card__1__body" .}}
-			      a body
-			    {{end}}
-			    </div>
-			  </div> 
-			{{end}}
-			{{template "component__1__card" .}}
-			`),
-		},
-
-		{
-			name: "test 2",
-			source: []byte(`
-			{{define "component--card"}}
-				{{block "slot--body" .}}
-					{{define "component--article"}}
-						{{block "slot--body" .}}
-							lorem ipsum
-						{{end}}
-					{{end}}
-				{{end}}
-			{{end}}			
-			`),
-
-			expected: []byte(`
-      {{define "component__1__card" }}
-        <div class="card">
-          <div class="card__header">
-          {{block "card__1__header" .}}
-            a header
-          {{end}}
-          </div>
-          <div class="card_body">
-          {{block "card__1__body" .}}
-            {{block "component__3__article" . }}
-            <div class="article">
-              {{block "article__3__body" .}}
-                lorem ipsum
-              {{end}}
-            </div>
-            {{end}}
-          {{end}}
-          </div>
-        </div> 
-      {{end}}
-      {{template "component__1__card" .}}
-			`),
-		},
+		{name: "find component", tag: "component", id: "card"},
+		{name: "find slot", tag: "slot", tname: "body"},
+		{name: "find p", tag: "p", wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doc := Document(tt.source)
-			trf := NewTransformer(&doc, "./samples", "tmpl")
-
-			c := trf.components[0]
-			cName := getComponentName(c)
-			cTpl, err := trf.getComponentTpl(cName)
-			if err != nil {
-				t.Fatalf("component %s not found", cName)
+			c, err := findTag(source, tt.tag)
+			if tt.wantErr && err == nil {
+				t.Fatalf("want error but got %s", c.Element)
 			}
 
-			got := trf.transformComponentBlock(cName, c, cTpl, false)
-
-			sg := diff.TrimLinesInString(string(got))
-			se := diff.TrimLinesInString(string(tt.expected))
-			if sg != se {
-				t.Errorf("wrong output:\n%s\n\n%s", string(got), string(tt.expected))
+			if c == nil && err == nil {
+				t.Fatalf("nil returned expecting %s", tt.tag)
 			}
+
+			if c != nil && tt.id != c.ID && tt.tname != c.Name {
+				t.Fatalf("expected: id=%s, name=%s, got:i d=%s, name=%s",
+					tt.id, tt.tname, c.ID, c.Name)
+			}
+
 		})
 	}
-
 }
 
-func TestTransformer_transformSubcomponentCall(t *testing.T) {
+func Test_findAction(t *testing.T) {
+	var source = []byte(`
+{{block "card" .}}
+<div class="w-100 bg-reg-800">
+	{{define "card__body"}}
+	Hello World
+	{{template "foo" . }}
+	{{block "inner" .}}inner{{end}}
+	{{end}}
+</div>
+{{end}}
+`)
 
-	doc := Document(tplSource)
-	trf := NewTransformer(&doc, "./samples", "tmpl")
+	tests := []struct {
+		name    string
+		tag     string
+		id      string
+		wantErr bool
+	}{
+		{name: "find block", tag: "block", id: "card"},
+		{name: "find define", tag: "define", id: "card__body"},
+	}
 
-	expected := `
-  {{block "slot--body" .}}
-      Chidinma is a fine girl!
-    {{block "component__3__article" . }}
-    <div class="article">
-      {{block "article__3__body" .}}
-        {{range $i := .Names}}
-        In the beginning was the word, and the {{.}} was with God and the word was God!
-        {{end}}
-      {{end}}
-    </div>
-    {{end}}
-  {{end}}	
-	`
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, err := findAction(source, tt.tag, tt.id)
+			if tt.wantErr && err == nil {
+				t.Fatalf("want error but got %s", c.Name)
+			}
 
-	t.Run("test 1", func(t *testing.T) {
-		c := trf.components[0]
+			if c == nil && err == nil {
+				t.Fatalf("nil returned expecting %s", tt.tag)
+			}
 
-		slot := c.children[0].Clone()
+			if c != nil && tt.id != c.ID {
+				t.Fatalf("expected: id=%s, got:id=%s",
+					tt.id, c.ID)
+			}
 
-		got := trf.transformSubcomponentCall(slot)
-
-		if diff.TrimLinesInString(string(got)) != diff.TrimLinesInString(expected) {
-			t.Errorf("got:\n%s\n\nwant\n%s", string(got), expected)
-		}
-	})
-
+		})
+	}
 }
+
+var tTpl = `
+<div>
+	<component id="card">
+		<p>
+		<slot Name="body">
+			<component id="article">inner</component>
+		</slot>
+	</component>
+</div>
+`
+
+var cTpl = `
+<div class="w-100 bg-reg-800">
+	{{block "body" . }}
+	Hello World
+	{{end}}
+</div>
+`
+
+/*
+{{block "card" .}}
+<div class="w-100 bg-reg-800">
+	{{block "card__body" .}}
+	Hello World
+	{{end}}
+</div>
+{{end}}
+*/
