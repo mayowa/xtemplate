@@ -8,7 +8,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/component.go" beforeDir="false" afterPath="$PROJECT_DIR$/component.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/component_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/component_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lex.go" beforeDir="false" afterPath="$PROJECT_DIR$/lex.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/_components/article.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/article.tmpl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/_components/card.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/card.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,15 +102,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.Test_findAction/find_define in github.com/mayowa/xtemplate">
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <module name="xtemplate" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Go Test.Test_translateComponents in github.com/mayowa/xtemplate">
     <configuration name="Test_findAction in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
@@ -143,7 +136,7 @@
       <pattern value="^\QTest_findAction\E$/^\Qfind_define\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="Test_findTag in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_listComponentSlots in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -151,10 +144,10 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTest_findTag\E$" />
+      <pattern value="^\QTest_listComponentSlots\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="Test_findTag/find_component in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_translateComponents in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -162,25 +155,16 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTest_findTag\E$/^\Qfind_component\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="xtemplate" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
+      <pattern value="^\QTest_translateComponents\E$" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.Test_translateComponents in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.Test_listComponentSlots in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_findAction/find_define in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_findAction/find_block in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_findAction in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_findTag in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_findTag/find_component in github.com/mayowa/xtemplate" />
       </list>
     </recent_temporary>
   </component>
@@ -210,21 +194,25 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/component.go</url>
-          <line>186</line>
+          <line>175</line>
           <option name="timeStamp" value="34" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/component.go</url>
-          <line>177</line>
+          <line>101</line>
+          <option name="timeStamp" value="35" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/component.go</url>
+          <line>85</line>
           <option name="timeStamp" value="36" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="GoTestRunConfiguration">
-        <watch expression="act.Name" language="go" />
-        <watch expression="action.Name" language="go" />
-        <watch expression="sAction.Name" language="go" />
+        <watch expression="tag.Name" language="go" />
+        <watch expression="tag.Element" language="go" />
       </configuration>
     </watches-manager>
   </component>

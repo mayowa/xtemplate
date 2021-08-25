@@ -1,7 +1,5 @@
-{{define "component--article" }}
-	<div class="article">
-	{{block "slot--body" .}}
-		a body
-	{{end}}
-	</div>
+<div class="article">
+{{block "body" .}}
+	a body
 {{end}}
+</div>

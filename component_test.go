@@ -2,6 +2,56 @@ package xtemplate
 
 import "testing"
 
+func Test_translateComponents(t *testing.T) {
+	var source = []byte(`
+<div>
+	<component id="card">
+		<slot name="body">
+			<component id="article">
+				<slot name="body">
+				article
+				</slot>
+			</component>
+		</slot>
+	</component>
+</div>
+`)
+
+	src := Document(source)
+	translateComponents(&src, "./samples")
+
+	t.Error(string(src))
+}
+
+func Test_listComponentSlots(t *testing.T) {
+	var source = []byte(`
+<div>
+	<component id="card">
+		<slot name="header">
+			a header
+		</slot>
+		<slot name="body">
+			<component id="article">
+				<slot name="abody">inner</slot>
+			</component>
+		</slot>
+	</component>
+</div>
+`)
+
+	retv, err := listComponentSlots(source, "card")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if retv[0].Name != "header" && retv[0].Name != "body" {
+		t.Error("wrong slots returned")
+		for _, s := range retv {
+			t.Error("slot :", s.Name)
+		}
+	}
+}
+
 func Test_findTag(t *testing.T) {
 	var source = []byte(`
 <div>

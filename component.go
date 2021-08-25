@@ -1,8 +1,10 @@
 package xtemplate
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -74,16 +76,61 @@ type Tag struct {
 	Body     string
 }
 
-func translateComponents(src []byte, tplFolder string) []byte {
-	// 
-	// for tag, _ := findTag(src, "component"); tag != nil; {
-	// 		cTpl, err := getComponentTemplate(tag.ID, tplFolder)
-	// 		if err != nil {
-	// 			continue
-	// 		}
-	// 		
-	// 		
-	// }
+func translateComponents(src *Document, tplFolder string) []byte {
+
+	cCount := 0
+	tplFolder = filepath.Join(tplFolder, "_components")
+
+	for {
+		log.Println(src.String())
+		tag, _ := findTag(*src, "component")
+		if tag == nil {
+			break
+		}
+		cCount++
+
+		cTpl, err := getComponentTemplate(tag.ID, tplFolder)
+		if err != nil {
+			continue
+		}
+
+		cBlock := Document(fmt.Sprintf("{{block \"%s_%d\" .}}\n", tag.ID, cCount))
+		cBlock.Append(cTpl, []byte("\n{{end}}"))
+
+		// substitute slot content
+		for {
+			slots, _ := listComponentSlots([]byte(tag.Body), tag.ID)
+			if len(slots) == 0 {
+				break
+			}
+			slot := slots[0]
+
+			action, err := findAction(cBlock, "block", slot.Name)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			if action == nil {
+				continue
+			}
+
+			oldAction := cBlock[action.StartPos:action.EndPos]
+			newAction := Document(oldAction)
+			// prefix slot block name with component id
+			sn := tag.ID + "__" + slot.Name
+			newAction.Replace([]byte(slot.Name), []byte(sn), 1)
+			// replace body
+			newAction.Replace([]byte(action.Body), []byte(slot.Body), 1)
+
+			// replace template action
+			cBlock.Replace(oldAction, newAction, 1)
+		}
+
+		// replace component
+		component := Document((*src)[tag.StartPos:tag.EndPos])
+		src.Replace(component, cBlock, 1)
+	}
+
 	return nil
 }
 
@@ -117,6 +164,50 @@ func findTag(src []byte, name string) (*Tag, error) {
 		err = fmt.Errorf("cant find closing tag for:%s", name)
 	}
 	return nil, err
+}
+
+func listComponentSlots(src []byte, id string) ([]Tag, error) {
+	id = strings.ToLower(id)
+	tags := htmlTagRe.FindAllSubmatchIndex(src, -1)
+	parentFound := false
+	stack := make([]Tag, 0)
+	retv := make([]Tag, 0)
+
+	for i := 0; i < len(tags); i++ {
+		tag := getTag(src, tags[i])
+		// log.Println(tag.Name)
+		if tag.Element == "component" && tag.ID == id && tag.Type == OpeningTag {
+			parentFound = true
+			continue
+		}
+		if !parentFound {
+			continue
+		}
+
+		if tag.Element == "slot" && tag.Type == OpeningTag {
+			stack = append(stack, tag)
+			continue
+		}
+
+		if tag.Element == "slot" && tag.Type == ClosingTag {
+			var sTag Tag
+			sTag, stack = stack[len(stack)-1], stack[:len(stack)-1]
+
+			if len(stack) == 0 {
+				sTag.Body = string(src[sTag.EndPos:tag.StartPos])
+				sTag.EndPos = tag.EndPos
+
+				retv = append(retv, sTag)
+			}
+		}
+	}
+
+	var err error
+	if len(stack) > 0 {
+		err = fmt.Errorf("cant find closing tag for:%s", id)
+	}
+
+	return retv, err
 }
 
 func getTag(src []byte, location []int) Tag {
@@ -247,4 +338,50 @@ func StrListIncludes(str string, list []string) bool {
 	}
 
 	return false
+}
+
+type Document []byte
+
+func (d *Document) String() string {
+	return string(*d)
+}
+
+func (d *Document) Append(docs ...[]byte) {
+	for _, doc := range docs {
+		if doc == nil {
+			continue
+		}
+		*d = append(*d, doc...)
+	}
+}
+
+func (d *Document) AppendString(docs ...string) {
+	for _, doc := range docs {
+		d.Append([]byte(doc))
+	}
+}
+
+func (d *Document) Cut(start, end int) {
+	*d = append((*d)[:start], (*d)[end:]...)
+}
+
+func (d *Document) CutAndInsert(start, end int, data []byte) {
+	d.Cut(start, end)
+
+	// grow to accommodate new data if required
+	if end-start < len(data) {
+		*d = append(*d, make(Document, len(data))...)
+	}
+
+	otherHalf := (*d)[end:]
+	// insert data
+	copy((*d)[start+1:], data)
+	// append the other half
+	copy((*d)[start+len(data):], otherHalf)
+	// clean up unused space
+	*d = (*d)[:start+len(data)+len(otherHalf)]
+}
+
+func (d *Document) Replace(old, new []byte, n int) {
+	*d = bytes.Replace(*d, old, new, n)
 }
