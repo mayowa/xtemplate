@@ -1,26 +1,88 @@
 package xtemplate
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/andreyvit/diff"
+)
 
 func Test_translateComponents(t *testing.T) {
-	var source = []byte(`
-<div>
-	<component id="card">
-		<slot name="body">
-			<component id="article">
+
+	tests := []struct {
+		name string
+		src  string
+		out  string
+	}{
+		{
+			name: "test 1",
+			src: `
+			<div>
+				<component id="card">
+					<slot name="body">
+						<component id="article">
+							<slot name="body">
+							article
+							</slot>
+						</component>
+					</slot>
+				</component>
+			</div>			
+			`,
+			out: `        
+        <div>
+        	{{block "card_1" .}}
+        <div class="card">
+        	<div class="card__header">
+        	{{block "header" .}}
+        		a header
+        	{{end}}
+        	</div>
+        	<div class="card__body">
+        	{{block "card__1__body" .}}
+        			{{block "article_2" .}}
+        <div class="article">
+        {{block "article__2__body" .}}
+        				article
+        				{{end}}
+        </div>
+        
+        {{end}}
+        		{{end}}
+        	</div>
+        </div> 
+        
+        {{end}}
+        </div>		
+		`,
+		},
+		{name: "test 2",
+			src: `
+			<component id="card">
 				<slot name="body">
-				article
+					<aside>
+						a side menu
+					</aside>
+					<component id="article2">
+						<slot name="body"> lorem ipsum </slot>
+					</component>
 				</slot>
 			</component>
-		</slot>
-	</component>
-</div>
-`)
+		`,
+			out: ``,
+		},
+	}
 
-	src := Document(source)
-	translateComponents(&src, "./samples")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			src := Document(tt.src)
+			translateComponents(&src, "./samples")
 
-	t.Error(string(src))
+			if diff.TrimLinesInString(tt.out) != diff.TrimLinesInString(string(src)) {
+				t.Errorf("got:\n%s, \nwant:\n%s", string(src), tt.out)
+			}
+		})
+	}
+
 }
 
 func Test_listComponentSlots(t *testing.T) {

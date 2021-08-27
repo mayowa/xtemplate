@@ -76,13 +76,17 @@ type Tag struct {
 	Body     string
 }
 
+func (t Tag) getSrc(src []byte) []byte {
+	return src[t.StartPos:t.EndPos]
+}
+
 func translateComponents(src *Document, tplFolder string) []byte {
 
 	cCount := 0
 	tplFolder = filepath.Join(tplFolder, "_components")
 
 	for {
-		log.Println(src.String())
+		// log.Println(src.String())
 		tag, _ := findTag(*src, "component")
 		if tag == nil {
 			break
@@ -98,13 +102,8 @@ func translateComponents(src *Document, tplFolder string) []byte {
 		cBlock.Append(cTpl, []byte("\n{{end}}"))
 
 		// substitute slot content
-		for {
-			slots, _ := listComponentSlots([]byte(tag.Body), tag.ID)
-			if len(slots) == 0 {
-				break
-			}
-			slot := slots[0]
-
+		slots, _ := listComponentSlots(tag.getSrc(*src), tag.ID)
+		for _, slot := range slots {
 			action, err := findAction(cBlock, "block", slot.Name)
 			if err != nil {
 				log.Println(err)
@@ -117,18 +116,18 @@ func translateComponents(src *Document, tplFolder string) []byte {
 			oldAction := cBlock[action.StartPos:action.EndPos]
 			newAction := Document(oldAction)
 			// prefix slot block name with component id
-			sn := tag.ID + "__" + slot.Name
+			sn := fmt.Sprintf("%s__%d__%s", tag.ID, cCount, slot.Name)
 			newAction.Replace([]byte(slot.Name), []byte(sn), 1)
 			// replace body
 			newAction.Replace([]byte(action.Body), []byte(slot.Body), 1)
 
 			// replace template action
 			cBlock.Replace(oldAction, newAction, 1)
+
 		}
 
-		// replace component
-		component := Document((*src)[tag.StartPos:tag.EndPos])
-		src.Replace(component, cBlock, 1)
+		// replace tag in src
+		src.Replace(tag.getSrc(*src), cBlock, 1)
 	}
 
 	return nil
