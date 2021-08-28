@@ -19,14 +19,14 @@ import (
 		<component id="card"><slot name="body">A new world</slot></component>
 		-- _components/card.tmpl
 		<div>
-			{{block "body" . }}
+			{{block "#slot--body" . }}
 			hello world
 			{{end}}
 		</div>
 		== >
 		{{block "component_1_card" .}}
 		<div>
-			{{block "body" . }}
+			{{block "card__1__body" . }}
 			hello world
 			{{end}}
 		</div>
@@ -36,27 +36,27 @@ import (
 		if a block action whose first parameter is the name of a slot exists in the component template
 		the body of the slot tag will replace the body of the block action
 		e.g:
-		<slot name="title">A slot title</slot> && {{block "title" . }}title{{end}}
+		<slot name="title">A slot title</slot> && {{block "#slot--title" . }}title{{end}}
 		 ==> {{block "title" . }}a slot title{{end}}
 	- If a component has no child slot but the component template has a default block
 		the body if the component replaces the body of the default block
 		e.g:
 		<component id="article">Hello world</component>
 		-- _components/article.tmpl
-		{{block "default" .}}{{end}}
+		{{block "#slot--default" .}}{{end}}
 
 		==> {{block "component_1_article" .}}
-					{{block "default".}}Hello world{{
+					{{block "article__1__default".}}Hello world{{
 				{{end}}
 
 */
 
-var componentStartRe = regexp.MustCompile(`(?i)<(component|slot)\s+(id|name)="([a-zA-Z0-9\-\_]*?)"\s*>`)
-var componentEndRe = regexp.MustCompile(`</(component|slot)>`)
-var attrRe = regexp.MustCompile(`(?i)(id|name)="([a-zA-Z0-9\-\_]*?)"`)
-var htmlTagRe = regexp.MustCompile(`</*([a-zA-Z]+)([\s="a-zA-Z0-9\-\_]*?)>`)
+// var componentStartRe = regexp.MustCompile(`(?i)<(component|slot)\s+(id|name)="([a-zA-Z0-9\-\_]*?)"\s*>`)
+// var componentEndRe = regexp.MustCompile(`</(component|slot)>`)
+var attrRe = regexp.MustCompile(`(?i)(id|name)="([a-zA-Z0-9\-_]*?)"`)
+var htmlTagRe = regexp.MustCompile(`</*([a-zA-Z]+)([\s="a-zA-Z0-9\-_]*?)>`)
 var actionTagRe = regexp.MustCompile(`{{-*\s*([\w]+)\s?([\s\w"-.$:=]*?)\s*-*}}`)
-var inQoutes = regexp.MustCompile(`"([\s\w#-.$:=]*?)"`)
+var inQuotes = regexp.MustCompile(`"([\s\w#-.$:=]*?)"`)
 
 type tagType int
 
@@ -79,7 +79,7 @@ func (t Tag) getSrc(src []byte) []byte {
 	return src[t.StartPos:t.EndPos]
 }
 
-func translateComponents(src *Document, tplFolder string) ([]byte, error) {
+func translateComponents(src *Document, tplFolder string) error {
 
 	cCount := 0
 	tplFolder = filepath.Join(tplFolder, "_components")
@@ -102,11 +102,11 @@ func translateComponents(src *Document, tplFolder string) ([]byte, error) {
 
 		slots, err := listComponentSlots(tag.getSrc(*src), tag.ID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		actions, err := listActionSlots(cBlock)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// substitute slot content
@@ -118,19 +118,10 @@ func translateComponents(src *Document, tplFolder string) ([]byte, error) {
 
 			action, err := findAction(cBlock, "block", action.ID)
 			if err != nil || action == nil {
-				return nil, err
+				return err
 			}
 
-			oldAction := cBlock[action.StartPos:action.EndPos]
-			newAction := Document(oldAction)
-			// prefix slot block name with component id
-			sn := fmt.Sprintf("%s__%d__%s", tag.ID, cCount, slot.Name)
-			newAction.Replace([]byte(action.ID), []byte(sn), 1)
-			// replace body
-			newAction.Replace([]byte(action.Body), []byte(slot.Body), 1)
-
-			// replace template action
-			cBlock.Replace(oldAction, newAction, 1)
+			swapContent(&cBlock, action, tag.ID, cCount, slot.Name, slot.Body)
 
 		}
 
@@ -138,25 +129,36 @@ func translateComponents(src *Document, tplFolder string) ([]byte, error) {
 		for _, a := range actions {
 			action, err := findAction(cBlock, "block", a.ID)
 			if err != nil || action == nil {
-				return nil, err
+				return err
 			}
 
-			oldAction := cBlock[action.StartPos:action.EndPos]
-			newAction := Document(oldAction)
-			// prefix slot block name with component id
-			an := strings.TrimPrefix(action.ID, "#slot--")
-			sn := fmt.Sprintf("%s__%d__%s", tag.ID, cCount, an)
-			newAction.Replace([]byte(action.ID), []byte(sn), 1)
-
-			// replace template action
-			cBlock.Replace(oldAction, newAction, 1)
+			swapContent(&cBlock, action, tag.ID, cCount, action.ID, "")
 		}
 
 		// replace tag in src
 		src.Replace(tag.getSrc(*src), cBlock, 1)
 	}
 
-	return nil, nil
+	return nil
+}
+
+func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slotName, slotBody string) {
+	oldAction := (*cBlock)[action.StartPos:action.EndPos]
+	newAction := Document(oldAction)
+	// prefix slot block name with component id
+	if strings.HasPrefix(slotName, "#slot--") {
+		slotName = strings.TrimPrefix(slotName, "#slot--")
+	}
+	sn := fmt.Sprintf("%s__%d__%s", tagID, cCount, slotName)
+	newAction.Replace([]byte(action.ID), []byte(sn), 1)
+
+	// replace body
+	if len(slotBody) > 0 {
+		newAction.Replace([]byte(action.Body), []byte(slotBody), 1)
+	}
+
+	// replace template action
+	cBlock.Replace(oldAction, newAction, 1)
 }
 
 func popAction(actions *[]Action, id string) *Action {
@@ -393,7 +395,7 @@ func getAction(src []byte, location []int) Action {
 	}
 
 	if act.Type == OpeningAction || act.Type == SingleAction {
-		groups := inQoutes.FindAllStringSubmatch(act.Attr, -1)
+		groups := inQuotes.FindAllStringSubmatch(act.Attr, -1)
 		if len(groups) > 0 {
 			act.ID = groups[0][1]
 		}
