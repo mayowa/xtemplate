@@ -79,14 +79,14 @@ func (t Tag) getSrc(src []byte) []byte {
 	return src[t.StartPos:t.EndPos]
 }
 
-func translateComponents(src *Document, tplFolder string) error {
+func translateComponents(src Document, tplFolder string) ([]byte, error) {
 
 	cCount := 0
 	tplFolder = filepath.Join(tplFolder, "_components")
 
 	for {
 		// log.Println(src.String())
-		tag, _ := findTag(*src, "component")
+		tag, _ := findTag(src, "component")
 		if tag == nil {
 			break
 		}
@@ -100,13 +100,13 @@ func translateComponents(src *Document, tplFolder string) error {
 		cBlock := Document(fmt.Sprintf("{{block \"%s_%d\" .}}\n", tag.ID, cCount))
 		cBlock.Append(cTpl, []byte("\n{{end}}"))
 
-		slots, err := listComponentSlots(tag.getSrc(*src), tag.ID)
+		slots, err := listComponentSlots(tag.getSrc(src), tag.ID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		actions, err := listActionSlots(cBlock)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// substitute slot content
@@ -118,7 +118,7 @@ func translateComponents(src *Document, tplFolder string) error {
 
 			action, err := findAction(cBlock, "block", action.ID)
 			if err != nil || action == nil {
-				return err
+				return nil, err
 			}
 
 			swapContent(&cBlock, action, tag.ID, cCount, slot.Name, slot.Body)
@@ -129,17 +129,22 @@ func translateComponents(src *Document, tplFolder string) error {
 		for _, a := range actions {
 			action, err := findAction(cBlock, "block", a.ID)
 			if err != nil || action == nil {
-				return err
+				return nil, err
+			}
+
+			if action.ID == "#slot--default" && len(slots) == 0 {
+				swapContent(&cBlock, action, tag.ID, cCount, "default", tag.Body)
+				continue
 			}
 
 			swapContent(&cBlock, action, tag.ID, cCount, action.ID, "")
 		}
 
 		// replace tag in src
-		src.Replace(tag.getSrc(*src), cBlock, 1)
+		src.Replace(tag.getSrc(src), cBlock, 1)
 	}
 
-	return nil
+	return src, nil
 }
 
 func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slotName, slotBody string) {

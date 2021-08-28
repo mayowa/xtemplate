@@ -107,12 +107,32 @@ func Test_translateComponents(t *testing.T) {
 		
 		`,
 		},
+		{
+			name: "test default",
+			src: `
+			<component id="box">
+				whats in a box?
+			</component>
+			`,
+			out: `
+      {{block "box_1" .}}
+        <div class="box">
+        	{{block "box__1__default" .}}
+        				whats in a box?
+          {{end}}
+        </div>
+        
+      {{end}}
+			`,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			src := Document(tt.src)
-			translateComponents(&src, "./samples")
+			src, err := translateComponents(Document(tt.src), "./samples")
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			if diff.TrimLinesInString(tt.out) != diff.TrimLinesInString(string(src)) {
 				t.Errorf("got:\n%s, \nwant:\n%s", string(src), tt.out)
@@ -287,32 +307,3 @@ func Test_findAction(t *testing.T) {
 		})
 	}
 }
-
-var tTpl = `
-<div>
-	<component id="card">
-		<p>
-		<slot Name="body">
-			<component id="article">inner</component>
-		</slot>
-	</component>
-</div>
-`
-
-var cTpl = `
-<div class="w-100 bg-reg-800">
-	{{block "body" . }}
-	Hello World
-	{{end}}
-</div>
-`
-
-/*
-{{block "card" .}}
-<div class="w-100 bg-reg-800">
-	{{block "card__body" .}}
-	Hello World
-	{{end}}
-</div>
-{{end}}
-*/
