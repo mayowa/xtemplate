@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -57,7 +56,7 @@ var componentEndRe = regexp.MustCompile(`</(component|slot)>`)
 var attrRe = regexp.MustCompile(`(?i)(id|name)="([a-zA-Z0-9\-\_]*?)"`)
 var htmlTagRe = regexp.MustCompile(`</*([a-zA-Z]+)([\s="a-zA-Z0-9\-\_]*?)>`)
 var actionTagRe = regexp.MustCompile(`{{-*\s*([\w]+)\s?([\s\w"-.$:=]*?)\s*-*}}`)
-var inQoutes = regexp.MustCompile(`"([\s\w-.$:=]*?)"`)
+var inQoutes = regexp.MustCompile(`"([\s\w#-.$:=]*?)"`)
 
 type tagType int
 
@@ -80,7 +79,7 @@ func (t Tag) getSrc(src []byte) []byte {
 	return src[t.StartPos:t.EndPos]
 }
 
-func translateComponents(src *Document, tplFolder string) []byte {
+func translateComponents(src *Document, tplFolder string) ([]byte, error) {
 
 	cCount := 0
 	tplFolder = filepath.Join(tplFolder, "_components")
@@ -101,23 +100,32 @@ func translateComponents(src *Document, tplFolder string) []byte {
 		cBlock := Document(fmt.Sprintf("{{block \"%s_%d\" .}}\n", tag.ID, cCount))
 		cBlock.Append(cTpl, []byte("\n{{end}}"))
 
+		slots, err := listComponentSlots(tag.getSrc(*src), tag.ID)
+		if err != nil {
+			return nil, err
+		}
+		actions, err := listActionSlots(cBlock)
+		if err != nil {
+			return nil, err
+		}
+
 		// substitute slot content
-		slots, _ := listComponentSlots(tag.getSrc(*src), tag.ID)
 		for _, slot := range slots {
-			action, err := findAction(cBlock, "block", slot.Name)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
+			action := popAction(&actions, "#slot--"+slot.Name)
 			if action == nil {
 				continue
+			}
+
+			action, err := findAction(cBlock, "block", action.ID)
+			if err != nil || action == nil {
+				return nil, err
 			}
 
 			oldAction := cBlock[action.StartPos:action.EndPos]
 			newAction := Document(oldAction)
 			// prefix slot block name with component id
 			sn := fmt.Sprintf("%s__%d__%s", tag.ID, cCount, slot.Name)
-			newAction.Replace([]byte(slot.Name), []byte(sn), 1)
+			newAction.Replace([]byte(action.ID), []byte(sn), 1)
 			// replace body
 			newAction.Replace([]byte(action.Body), []byte(slot.Body), 1)
 
@@ -126,8 +134,39 @@ func translateComponents(src *Document, tplFolder string) []byte {
 
 		}
 
+		// process unused slots
+		for _, a := range actions {
+			action, err := findAction(cBlock, "block", a.ID)
+			if err != nil || action == nil {
+				return nil, err
+			}
+
+			oldAction := cBlock[action.StartPos:action.EndPos]
+			newAction := Document(oldAction)
+			// prefix slot block name with component id
+			an := strings.TrimPrefix(action.ID, "#slot--")
+			sn := fmt.Sprintf("%s__%d__%s", tag.ID, cCount, an)
+			newAction.Replace([]byte(action.ID), []byte(sn), 1)
+
+			// replace template action
+			cBlock.Replace(oldAction, newAction, 1)
+		}
+
 		// replace tag in src
 		src.Replace(tag.getSrc(*src), cBlock, 1)
+	}
+
+	return nil, nil
+}
+
+func popAction(actions *[]Action, id string) *Action {
+	var a Action
+	for i := 0; i < len(*actions); i++ {
+		a = (*actions)[i]
+		if a.ID == id {
+			*actions = append((*actions)[:i], (*actions)[i+1:]...)
+			return &a
+		}
 	}
 
 	return nil
@@ -295,6 +334,47 @@ func findAction(src []byte, name, id string) (*Action, error) {
 		err = fmt.Errorf("cant find closing action for:%s", name)
 	}
 	return nil, err
+}
+
+func listActionSlots(src []byte) ([]Action, error) {
+	name := "block"
+	slotPrefix := "#slot--"
+
+	actions := actionTagRe.FindAllSubmatchIndex(src, -1)
+	stack := make([]Action, 0)
+	slots := make([]Action, 0)
+
+	for i := 0; i < len(actions); i++ {
+		action := getAction(src, actions[i])
+		// log.Println(tag.Name)
+		if action.Type == OpeningAction {
+			stack = append(stack, action)
+			continue
+		}
+
+		if action.Type == ClosingAction {
+			var sAction Action
+			if len(stack) == 0 {
+				return nil, fmt.Errorf("found closing action without a coresponding opening action")
+			}
+
+			sAction, stack = stack[len(stack)-1], stack[:len(stack)-1]
+
+			if sAction.Name == name && strings.HasPrefix(sAction.ID, slotPrefix) {
+				sAction.Body = string(src[sAction.EndPos:action.StartPos])
+				sAction.EndPos = action.EndPos
+
+				slots = append(slots, sAction)
+				continue
+			}
+		}
+	}
+
+	var err error
+	if len(stack) > 0 {
+		err = fmt.Errorf("cant find closing action for:%s", name)
+	}
+	return slots, err
 }
 
 func getAction(src []byte, location []int) Action {

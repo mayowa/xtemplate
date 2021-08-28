@@ -29,30 +29,30 @@ func Test_translateComponents(t *testing.T) {
 			</div>			
 			`,
 			out: `        
-        <div>
-        	{{block "card_1" .}}
+        			<div>
+        				{{block "card_1" .}}
         <div class="card">
         	<div class="card__header">
-        	{{block "header" .}}
+        	{{block "card__1__header" .}}
         		a header
         	{{end}}
         	</div>
         	<div class="card__body">
         	{{block "card__1__body" .}}
-        			{{block "article_2" .}}
+        						{{block "article_2" .}}
         <div class="article">
         {{block "article__2__body" .}}
-        				article
-        				{{end}}
+        							article
+        							{{end}}
         </div>
         
         {{end}}
-        		{{end}}
+        					{{end}}
         	</div>
         </div> 
         
         {{end}}
-        </div>		
+        			</div>	
 		`,
 		},
 		{name: "test 2",
@@ -68,7 +68,44 @@ func Test_translateComponents(t *testing.T) {
 				</slot>
 			</component>
 		`,
-			out: ``,
+			out: `
+        			{{block "card_1" .}}
+        <div class="card">
+        	<div class="card__header">
+        	{{block "card__1__header" .}}
+        		a header
+        	{{end}}
+        	</div>
+        	<div class="card__body">
+        	{{block "card__1__body" .}}
+        					<aside>
+        						a side menu
+        					</aside>
+        					{{block "article2_2" .}}
+        {{block "card_3" .}}
+        <div class="card">
+        	<div class="card__header">
+        	{{block "card__3__header" .}}
+        		a header
+        	{{end}}
+        	</div>
+        	<div class="card__body">
+        	{{block "card__3__body" .}}
+        	{{block "article2__2__body" .}} lorem ipsum {{end}}
+        	{{end}}
+        	</div>
+        </div> 
+        
+        {{end}}
+        
+        {{end}}
+        				{{end}}
+        	</div>
+        </div> 
+        
+        {{end}}
+		
+		`,
 		},
 	}
 
@@ -83,6 +120,56 @@ func Test_translateComponents(t *testing.T) {
 		})
 	}
 
+}
+
+func Test_popAction(t *testing.T) {
+	as := []Action{
+		{ID: "a"}, {ID: "b"}, {ID: "c"},
+	}
+
+	popAction(&as, "a")
+	popAction(&as, "a")
+	popAction(&as, "b")
+	popAction(&as, "b")
+	popAction(&as, "c")
+	popAction(&as, "c")
+
+	if len(as) != 0 {
+		t.Fatal("list should be empty")
+	}
+}
+
+func Test_listActionSlots(t *testing.T) {
+	var source = []byte(`
+<div class="card">
+	<div class="card__header">
+	{{block "#slot--header" .}}
+		a header
+	{{end}}
+	</div>
+	<div class="card__body">
+	{{block "#slot--body" .}}
+		a body
+	{{end}}
+	</div>
+</div> 
+`)
+
+	retv, err := listActionSlots(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(retv) != 2 {
+		t.Fatal("actions not found")
+	}
+
+	if retv[0].ID != "#slot--header" && retv[1].Name != "#slot--body" {
+		t.Error("wrong actions returned")
+		for _, s := range retv {
+			t.Error("action :", s.ID)
+		}
+	}
 }
 
 func Test_listComponentSlots(t *testing.T) {
