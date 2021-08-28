@@ -17,7 +17,7 @@ import (
 		when a component template is found its translated into a block action
 		e.g
 		<component id="card"><slot name="body">A new world</slot></component>
-		-- _components/card.tmpl
+		-- _components/card.html
 		<div>
 			{{block "#slot--body" . }}
 			hello world
@@ -42,7 +42,7 @@ import (
 		the body if the component replaces the body of the default block
 		e.g:
 		<component id="article">Hello world</component>
-		-- _components/article.tmpl
+		-- _components/article.html
 		{{block "#slot--default" .}}{{end}}
 
 		==> {{block "component_1_article" .}}
@@ -53,7 +53,7 @@ import (
 
 // var componentStartRe = regexp.MustCompile(`(?i)<(component|slot)\s+(id|name)="([a-zA-Z0-9\-\_]*?)"\s*>`)
 // var componentEndRe = regexp.MustCompile(`</(component|slot)>`)
-var attrRe = regexp.MustCompile(`(?i)(id|name)="([a-zA-Z0-9\-_]*?)"`)
+var attrRe = regexp.MustCompile(`(?i)(id|name|type)="([a-zA-Z0-9\-_]*?)"`)
 var htmlTagRe = regexp.MustCompile(`</*([a-zA-Z]+)([\s="a-zA-Z0-9\-_]*?)>`)
 var actionTagRe = regexp.MustCompile(`{{-*\s*([\w]+)\s?([\s\w"-.$:=]*?)\s*-*}}`)
 var inQuotes = regexp.MustCompile(`"([\s\w#-.$:=]*?)"`)
@@ -79,10 +79,10 @@ func (t Tag) getSrc(src []byte) []byte {
 	return src[t.StartPos:t.EndPos]
 }
 
-func translateComponents(src Document, tplFolder string) ([]byte, error) {
+func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 
 	cCount := 0
-	tplFolder = filepath.Join(tplFolder, "_components")
+	tplFolder := filepath.Join(tpl.folder, "_components")
 
 	for {
 		// log.Println(src.String())
@@ -92,7 +92,7 @@ func translateComponents(src Document, tplFolder string) ([]byte, error) {
 		}
 		cCount++
 
-		cTpl, err := getComponentTemplate(tag.ID, tplFolder)
+		cTpl, err := getComponentTemplate(tag.ID, tplFolder, tpl.ext)
 		if err != nil {
 			continue
 		}
@@ -182,7 +182,7 @@ func popAction(actions *[]Action, id string) *Action {
 func findTag(src []byte, name string) (*Tag, error) {
 	name = strings.ToLower(name)
 	tags := htmlTagRe.FindAllSubmatchIndex(src, -1)
-	stack := []Tag{}
+	stack := make([]Tag, 0)
 
 	for i := 0; i < len(tags); i++ {
 		tag := getTag(src, tags[i])
@@ -274,7 +274,7 @@ func getTag(src []byte, location []int) Tag {
 		if len(groups) > 0 && len(groups[0]) > 5 {
 			key := strings.ToLower(string(tagSrc[groups[0][2]:groups[0][3]]))
 			val := string(tagSrc[groups[0][4]:groups[0][5]])
-			if key == "id" {
+			if key == "id" || key == "type" {
 				tag.ID = val
 			} else {
 				tag.Name = val
@@ -409,8 +409,11 @@ func getAction(src []byte, location []int) Action {
 	return act
 }
 
-func getComponentTemplate(name, folder string) (contents []byte, err error) {
-	fleName := filepath.Join(folder, name+".tmpl")
+func getComponentTemplate(name, folder, ext string) (contents []byte, err error) {
+	if len(ext) == 0 {
+		ext = "tmpl"
+	}
+	fleName := filepath.Join(folder, name+"."+ext)
 	contents, err = ioutil.ReadFile(fleName)
 
 	return

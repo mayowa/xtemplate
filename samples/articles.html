@@ -1,0 +1,15 @@
+{{extends "master.html"}}
+{{include "extras.html"}}
+
+{{define "body"}}
+with overlay body<br>
+{{ macro button("submit2") }}
+{{ macro list("A", "B") }}
+{{ macro hello("name"::"mayowa", "age"::18) }}
+
+<tag type="div" class="red">
+    <p>Hello</p>
+    <p>World</p>
+</tag>
+
+{{end}}

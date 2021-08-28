@@ -17,9 +17,9 @@ func Test_translateComponents(t *testing.T) {
 			name: "test 1",
 			src: `
 			<div>
-				<component id="card">
+				<component type="card">
 					<slot name="body">
-						<component id="article">
+						<component type="article">
 							<slot name="body">
 							article
 							</slot>
@@ -127,9 +127,10 @@ func Test_translateComponents(t *testing.T) {
 		},
 	}
 
+	xt := New("./samples", "html")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			src, err := translateComponents(Document(tt.src), "./samples")
+			src, err := translateComponents(xt, Document(tt.src))
 			if err != nil {
 				t.Fatal(err)
 			}

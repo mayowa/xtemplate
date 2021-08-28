@@ -231,7 +231,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 
 	fleContent := []byte(tplStr)
 	var fm *frontMatter
-	fleContent, fm, err = preProccess(s, fleContent)
+	fleContent, fm, err = preProcess(s, fleContent)
 	if err != nil {
 		return "", err
 	}
@@ -310,7 +310,7 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	}
 
 	var fm *frontMatter
-	fleContent, fm, err = preProccess(s, fleContent)
+	fleContent, fm, err = preProcess(s, fleContent)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +395,7 @@ func parseFiles(xt *XTemplate, t *template.Template, baseFolder, ext string, fil
 
 			return nil, err
 		}
-		prd, _, err := preProccess(xt, b)
+		prd, _, err := preProcess(xt, b)
 		if err != nil {
 			return nil, err
 		}
@@ -420,14 +420,23 @@ func parseFiles(xt *XTemplate, t *template.Template, baseFolder, ext string, fil
 	return t, nil
 }
 
-func preProccess(tpl *XTemplate, fleContent []byte) ([]byte, *frontMatter, error) {
+func preProcess(tpl *XTemplate, fleContent []byte) ([]byte, *frontMatter, error) {
 
 	// extract front matter
-	var fm *frontMatter
+	var (
+		fm  *frontMatter
+		err error
+	)
+
 	fm, fleContent = extractFrontMatter(actRe, fleContent)
 
 	// add template "name" to includes
 	fm = extractTemplates(tplRe2, fm, fleContent)
+
+	fleContent, err = translateComponents(tpl, fleContent)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// <tag> --> tag .type .attr . content
 	fleContent = translateTags(tpl, fleContent)
