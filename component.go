@@ -10,13 +10,13 @@ import (
 )
 
 /*
-	- A component is an HTML tag <component id="card"></component>
+	- A component is an HTML tag <component type="card"></component>
 	- Every valid component must have an id attribute
 	- A template file whose name is the value of id attribute must exist in the component template folder
 	- A component template must be a valid go text/template
 		when a component template is found its translated into a block action
 		e.g
-		<component id="card"><slot name="body">A new world</slot></component>
+		<component type="card"><slot name="body">A new world</slot></component>
 		-- _components/card.html
 		<div>
 			{{block "#slot--body" . }}
@@ -41,7 +41,7 @@ import (
 	- If a component has no child slot but the component template has a default block
 		the body if the component replaces the body of the default block
 		e.g:
-		<component id="article">Hello world</component>
+		<component type="article">Hello world</component>
 		-- _components/article.html
 		{{block "#slot--default" .}}{{end}}
 
@@ -53,7 +53,7 @@ import (
 
 // var componentStartRe = regexp.MustCompile(`(?i)<(component|slot)\s+(id|name)="([a-zA-Z0-9\-\_]*?)"\s*>`)
 // var componentEndRe = regexp.MustCompile(`</(component|slot)>`)
-var attrRe = regexp.MustCompile(`(?i)(id|name|type)="([a-zA-Z0-9\-_]*?)"`)
+var attrRe = regexp.MustCompile(`(?i)(name|type)="([a-zA-Z0-9\-_]*?)"`)
 var htmlTagRe = regexp.MustCompile(`</*([a-zA-Z]+)([\s="a-zA-Z0-9\-_]*?)>`)
 var actionTagRe = regexp.MustCompile(`{{-*\s*([\w]+)\s?([\s\w"-.$:=]*?)\s*-*}}`)
 var inQuotes = regexp.MustCompile(`"([\s\w#-.$:=]*?)"`)
@@ -78,6 +78,9 @@ type Tag struct {
 func (t Tag) getSrc(src []byte) []byte {
 	return src[t.StartPos:t.EndPos]
 }
+func (t Tag) Equal(tag *Tag) bool {
+	return t.Element == tag.Element && t.Type == tag.Type && t.Name == tag.Name && t.ID == tag.ID
+}
 
 func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 
@@ -90,6 +93,16 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 		if tag == nil {
 			break
 		}
+
+		components, err := listComponents(src)
+		if err != nil {
+			return nil, err
+		}
+		if len(components) == 0 {
+			break
+		}
+
+		// tag = *fTag
 		cCount++
 
 		cTpl, err := getComponentTemplate(tag.ID, tplFolder, tpl.ext)
@@ -97,7 +110,7 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 			continue
 		}
 
-		cBlock := Document(fmt.Sprintf("{{block \"%s_%d\" .}}\n", tag.ID, cCount))
+		cBlock := Document(fmt.Sprintf("{{block \"component__%s__%d\" .}}\n", tag.ID, cCount))
 		cBlock.Append(cTpl, []byte("\n{{end}}"))
 
 		slots, err := listComponentSlots(tag.getSrc(src), tag.ID)
@@ -145,6 +158,16 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 	}
 
 	return src, nil
+}
+
+func tagInList(tags []Tag, tag *Tag) bool {
+	for _, t := range tags {
+		if t.Equal(tag) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slotName, slotBody string) {
@@ -209,6 +232,41 @@ func findTag(src []byte, name string) (*Tag, error) {
 		err = fmt.Errorf("cant find closing tag for:%s", name)
 	}
 	return nil, err
+}
+
+func listComponents(src []byte) ([]Tag, error) {
+	tags := htmlTagRe.FindAllSubmatchIndex(src, -1)
+	stack := make([]Tag, 0)
+	retv := make([]Tag, 0)
+
+	for i := 0; i < len(tags); i++ {
+		tag := getTag(src, tags[i])
+		// log.Println(tag.Name)
+		if tag.Element == "component" && tag.Type == OpeningTag {
+			stack = append(stack, tag)
+			continue
+		}
+
+		if tag.Element == "component" && tag.Type == ClosingTag {
+			var sTag Tag
+			sTag, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			if sTag.ID == "" {
+				// malformed component: type attribute wasn't found
+				continue
+			}
+
+			sTag.Body = string(src[sTag.EndPos:tag.StartPos])
+			sTag.EndPos = tag.EndPos
+			retv = append(retv, sTag)
+		}
+	}
+
+	var err error
+	if len(stack) > 0 {
+		err = fmt.Errorf("cant find closing tag for component")
+	}
+
+	return retv, err
 }
 
 func listComponentSlots(src []byte, id string) ([]Tag, error) {

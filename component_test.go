@@ -30,7 +30,7 @@ func Test_translateComponents(t *testing.T) {
 			`,
 			out: `        
         			<div>
-        				{{block "card_1" .}}
+        				{{block "component__card__1" .}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
@@ -39,7 +39,7 @@ func Test_translateComponents(t *testing.T) {
         	</div>
         	<div class="card__body">
         	{{block "card__1__body" .}}
-        						{{block "article_2" .}}
+        						{{block "component__article__2" .}}
         <div class="article">
         {{block "article__2__body" .}}
         							article
@@ -52,24 +52,24 @@ func Test_translateComponents(t *testing.T) {
         </div> 
         
         {{end}}
-        			</div>	
+        			</div>
 		`,
 		},
 		{name: "test 2",
 			src: `
-			<component id="card">
+			<component type="card">
 				<slot name="body">
 					<aside>
 						a side menu
 					</aside>
-					<component id="article2">
+					<component type="article2">
 						<slot name="body"> lorem ipsum </slot>
 					</component>
 				</slot>
 			</component>
 		`,
 			out: `
-        			{{block "card_1" .}}
+        			{{block "component__card__1" .}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
@@ -81,8 +81,8 @@ func Test_translateComponents(t *testing.T) {
         					<aside>
         						a side menu
         					</aside>
-        					{{block "article2_2" .}}
-        {{block "card_3" .}}
+        					{{block "component__article2__2" .}}
+        {{block "component__card__3" .}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__3__header" .}}
@@ -91,8 +91,8 @@ func Test_translateComponents(t *testing.T) {
         	</div>
         	<div class="card__body">
         	{{block "card__3__body" .}}
-        	{{block "article2__2__body" .}} lorem ipsum {{end}}
-        	{{end}}
+        			{{block "article2__2__body" .}} lorem ipsum {{end}}
+        		{{end}}
         	</div>
         </div> 
         
@@ -103,23 +103,40 @@ func Test_translateComponents(t *testing.T) {
         	</div>
         </div> 
         
-        {{end}}
-		
+        {{end}}		
 		`,
 		},
 		{
 			name: "test default",
 			src: `
-			<component id="box">
+			<component type="box">
 				whats in a box?
 			</component>
 			`,
 			out: `
-      {{block "box_1" .}}
+      {{block "component__box__1" .}}
         <div class="box">
         	{{block "box__1__default" .}}
         				whats in a box?
-          {{end}}
+        			{{end}}
+        </div>
+        
+        {{end}}
+			`,
+		},
+		{
+			name: "test html attributes",
+			src: `
+			<component type="box" class="red">
+				whats in a box?
+			</component>
+			`,
+			out: `
+      {{block "component__box__1" .}}
+        <div class="box">
+        	{{block "box__1__default" .}}
+        				whats in a box?
+        			{{end}}
         </div>
         
       {{end}}
@@ -141,6 +158,63 @@ func Test_translateComponents(t *testing.T) {
 		})
 	}
 
+}
+
+func Test_listComponents(t *testing.T) {
+	tests := []struct {
+		name     string
+		src      string
+		expected int
+		wantErr  bool
+	}{
+		{
+			name: "test 1",
+			src: `
+			<component type="box">
+				whats in a box?
+				<component type="article">
+				article
+				</component>
+			</component>			
+			
+			<component type="box">box</component>
+			`,
+			expected: 3,
+		},
+		{
+			name: "test mismatched",
+			src: `
+			<component type="box">
+				whats in a box?
+				<component type="article">
+				article
+			</component>			
+			
+			<component type="box">box</component>
+			`,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			retv, err := listComponents([]byte(tt.src))
+			if err != nil && !tt.wantErr {
+				t.Fatal(err)
+			} else if tt.wantErr && err == nil {
+				t.Fatal("expected err got nil")
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			if len(retv) != tt.expected {
+				t.Fatalf("expected %d components got %d", tt.expected, len(retv))
+			}
+		})
+
+	}
 }
 
 func Test_popAction(t *testing.T) {
