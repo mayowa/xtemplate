@@ -53,7 +53,7 @@ import (
 
 // var componentStartRe = regexp.MustCompile(`(?i)<(component|slot)\s+(id|name)="([a-zA-Z0-9\-\_]*?)"\s*>`)
 // var componentEndRe = regexp.MustCompile(`</(component|slot)>`)
-var attrRe = regexp.MustCompile(`(?i)(name|type)="([a-zA-Z0-9\-_]*?)"`)
+var attrRe = regexp.MustCompile(`(?i)(name|type|class|style|id)="([\w\W]*?)"|'([\w\W]*?)'`)
 var htmlTagRe = regexp.MustCompile(`</*([a-zA-Z]+)([\s="a-zA-Z0-9\-_]*?)>`)
 var actionTagRe = regexp.MustCompile(`{{-*\s*([\w]+)\s?([\s\w"-.$:=]*?)\s*-*}}`)
 var inQuotes = regexp.MustCompile(`"([\s\w#-.$:=]*?)"`)
@@ -73,6 +73,35 @@ type Tag struct {
 	EndPos   int
 	Type     tagType
 	Body     string
+	Attr     TagAttr
+}
+
+type Attr struct {
+	Key   string
+	Value string
+	Src   string
+}
+
+type TagAttr map[string]*Attr
+
+func (a *TagAttr) Merge(attrs TagAttr) {
+	for k, v := range attrs {
+		switch k {
+		case "class":
+			(*a)[k].Value = v.Value
+		}
+	}
+}
+
+func (a *TagAttr) Add(key, val, src string) {
+
+	(*a)[key] = &Attr{
+		Key:   strings.ToLower(key),
+		Value: val,
+		Src:   src,
+	}
+	(*a)[key].Value = val
+
 }
 
 func (t Tag) getSrc(src []byte) []byte {
@@ -319,6 +348,7 @@ func getTag(src []byte, location []int) Tag {
 		StartPos: location[0],
 		EndPos:   location[1],
 		Type:     OpeningTag,
+		Attr:     TagAttr{},
 	}
 
 	if src[tag.StartPos+1] == '/' {
@@ -329,18 +359,20 @@ func getTag(src []byte, location []int) Tag {
 		tagSrc := src[tag.StartPos:tag.EndPos]
 		// log.Println(string(tagSrc))
 		groups := attrRe.FindAllSubmatchIndex(tagSrc, -1)
-		if len(groups) > 0 && len(groups[0]) > 5 {
-			key := strings.ToLower(string(tagSrc[groups[0][2]:groups[0][3]]))
-			val := string(tagSrc[groups[0][4]:groups[0][5]])
-			if key == "id" || key == "type" {
-				tag.ID = val
-			} else {
-				tag.Name = val
+		for _, g := range groups {
+			if len(g) > 5 {
+				attrSrc := string(tagSrc[g[0]:g[1]])
+				key := string(tagSrc[g[2]:g[3]])
+				val := string(tagSrc[g[4]:g[5]])
+				tag.Attr.Add(key, val, attrSrc)
+
+				if key == "type" {
+					tag.ID = val
+				} else if key == "name" {
+					tag.Name = val
+				}
 			}
-
-			// log.Println(key, val)
 		}
-
 	}
 
 	return tag
