@@ -333,13 +333,13 @@ func Test_listActionSlots(t *testing.T) {
 func Test_listComponentSlots(t *testing.T) {
 	var source = []byte(`
 <div>
-	<component id="card">
+	<component type="card">
 		<slot name="header">
 			a header
 		</slot>
 		<slot name="body">
-			<component id="article">
-				<slot name="abody">inner</slot>
+			<component type="article">
+				<slot name="aBody">inner</slot>
 			</component>
 		</slot>
 	</component>
@@ -349,6 +349,10 @@ func Test_listComponentSlots(t *testing.T) {
 	retv, err := listComponentSlots(source, "card")
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if len(retv) == 0 {
+		t.Fatal("components not detected in source")
 	}
 
 	if retv[0].Name != "header" && retv[0].Name != "body" {
