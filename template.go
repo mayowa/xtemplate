@@ -51,10 +51,6 @@ var tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
 var tagRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
 var tplRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
 
-// expressions for the new lexer
-var tplBlockStart = regexp.MustCompile(`{{-*\s*([*#\w-]+)\s+(["\w \t_-]+?)\s*-*}}`)
-var tplBlockEnd = regexp.MustCompile(`{{-*\s*end\s*-*}}`)
-
 // New create new instance of XTemplate
 func New(folder, ext string) *XTemplate {
 

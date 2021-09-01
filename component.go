@@ -150,11 +150,11 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 
 		cBlock := Document{}
 		cBlock.AppendString(
-			fmt.Sprintf("{{block \"component__%s__%d\" .}}\n", tag.ID, cCount),
+			fmt.Sprintf("{{- block \"component__%s__%d\" . -}}\n", tag.ID, cCount),
 			fmt.Sprintf("{{- $props := (%s) -}}\n", argStr),
 		)
 
-		cBlock.Append(cTpl, []byte("\n{{end}}"))
+		cBlock.Append(cTpl, []byte("\n{{end -}}"))
 
 		slots, err := listComponentSlots(tag.getSrc(src), tag.ID)
 		if err != nil {
