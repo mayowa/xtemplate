@@ -31,6 +31,7 @@ func Test_translateComponents(t *testing.T) {
 			out: `        
         			<div>
         				{{block "component__card__1" .}}
+        {{- $props := (kwargs "_blank" "") -}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
@@ -39,9 +40,14 @@ func Test_translateComponents(t *testing.T) {
         	</div>
         	<div class="card__body">
         	{{block "card__1__body" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         						{{block "component__article__2" .}}
+        {{- $props := (kwargs "_blank" "") -}}
         <div class="article">
         {{block "article__2__body" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         							article
         							{{end}}
         </div>
@@ -52,7 +58,7 @@ func Test_translateComponents(t *testing.T) {
         </div> 
         
         {{end}}
-        			</div>
+        			</div>		
 		`,
 		},
 		{name: "test 2",
@@ -70,6 +76,7 @@ func Test_translateComponents(t *testing.T) {
 		`,
 			out: `
         			{{block "component__card__1" .}}
+        {{- $props := (kwargs "_blank" "") -}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
@@ -78,11 +85,15 @@ func Test_translateComponents(t *testing.T) {
         	</div>
         	<div class="card__body">
         	{{block "card__1__body" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         					<aside>
         						a side menu
         					</aside>
         					{{block "component__article2__2" .}}
+        {{- $props := (kwargs "_blank" "") -}}
         {{block "component__card__3" .}}
+        {{- $props := (kwargs "_blank" "") -}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__3__header" .}}
@@ -91,7 +102,11 @@ func Test_translateComponents(t *testing.T) {
         	</div>
         	<div class="card__body">
         	{{block "card__3__body" .}}
-        			{{block "article2__2__body" .}} lorem ipsum {{end}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
+        			{{block "article2__2__body" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+         lorem ipsum {{end}}
         		{{end}}
         	</div>
         </div> 
@@ -103,7 +118,7 @@ func Test_translateComponents(t *testing.T) {
         	</div>
         </div> 
         
-        {{end}}		
+        {{end}}
 		`,
 		},
 		{
@@ -114,9 +129,12 @@ func Test_translateComponents(t *testing.T) {
 			</component>
 			`,
 			out: `
-      {{block "component__box__1" .}}
+        {{block "component__box__1" .}}
+        {{- $props := (kwargs "_blank" "") -}}
         <div class="box">
         	{{block "box__1__default" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         				whats in a box?
         			{{end}}
         </div>
@@ -132,14 +150,17 @@ func Test_translateComponents(t *testing.T) {
 			</component>
 			`,
 			out: `
-      {{block "component__box__1" .}}
+        {{block "component__box__1" .}}
+        {{- $props := (kwargs "class" "red") -}}
         <div class="box">
         	{{block "box__1__default" .}}
+        {{- $props := (kwargs "class" "red") -}}
+        
         				whats in a box?
         			{{end}}
         </div>
         
-      {{end}}
+        {{end}}
 			`,
 		},
 	}
@@ -154,6 +175,48 @@ func Test_translateComponents(t *testing.T) {
 
 			if diff.TrimLinesInString(tt.out) != diff.TrimLinesInString(string(src)) {
 				t.Errorf("got:\n%s, \nwant:\n%s", string(src), tt.out)
+			}
+		})
+	}
+
+}
+
+func Test_renderComponents(t *testing.T) {
+
+	tests := []struct {
+		name string
+		src  string
+		out  string
+	}{
+		{
+			name: "test 1",
+			src: `
+			<component type="box" class="red">
+				whats in a box {{$props.class}} {{.name}}?
+			</component>
+			`,
+			out: `
+        <div class="box">
+        	whats in a box red bread?
+        			
+        </div>			
+			`,
+		},
+	}
+
+	xt := New("./samples", "html")
+	data := map[string]interface{}{"name": "bread"}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			src, err := xt.RenderString(tt.src, data)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff.TrimLinesInString(tt.out) != diff.TrimLinesInString(src) {
+				t.Errorf("got:\n%s, \nwant:\n%s", src, tt.out)
 			}
 		})
 	}

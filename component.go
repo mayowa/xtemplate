@@ -142,14 +142,16 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 			if k == "type" {
 				continue
 			}
-
 			argStr += fmt.Sprintf(` "%s" "%s"`, k, v.Value)
+		}
+		if argStr == "kwargs" {
+			argStr += ` "_blank" ""`
 		}
 
 		cBlock := Document{}
 		cBlock.AppendString(
 			fmt.Sprintf("{{block \"component__%s__%d\" .}}\n", tag.ID, cCount),
-			fmt.Sprintf("{{$props := (%s)}}\n", argStr),
+			fmt.Sprintf("{{- $props := (%s) -}}\n", argStr),
 		)
 
 		cBlock.Append(cTpl, []byte("\n{{end}}"))
@@ -175,7 +177,7 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 				return nil, err
 			}
 
-			swapContent(&cBlock, action, tag.ID, cCount, slot.Name, slot.Body)
+			swapContent(&cBlock, action, tag.ID, cCount, slot.Name, slot.Body, argStr)
 
 		}
 
@@ -187,11 +189,11 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 			}
 
 			if action.ID == "#slot--default" && len(slots) == 0 {
-				swapContent(&cBlock, action, tag.ID, cCount, "default", tag.Body)
+				swapContent(&cBlock, action, tag.ID, cCount, "default", tag.Body, argStr)
 				continue
 			}
 
-			swapContent(&cBlock, action, tag.ID, cCount, action.ID, "")
+			swapContent(&cBlock, action, tag.ID, cCount, action.ID, "", argStr)
 		}
 
 		// replace tag in src
@@ -211,7 +213,7 @@ func tagInList(tags []Tag, tag *Tag) bool {
 	return false
 }
 
-func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slotName, slotBody string) {
+func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slotName, slotBody, props string) {
 	oldAction := (*cBlock)[action.StartPos:action.EndPos]
 	newAction := Document(oldAction)
 	// prefix slot block name with component id
@@ -223,6 +225,9 @@ func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slo
 
 	// replace body
 	if len(slotBody) > 0 {
+		if len(props) > 0 {
+			slotBody = fmt.Sprintf("\n{{- $props := (%s) -}}\n%s", props, slotBody)
+		}
 		newAction.Replace([]byte(action.Body), []byte(slotBody), 1)
 	}
 
