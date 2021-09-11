@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/component.go" beforeDir="false" afterPath="$PROJECT_DIR$/component.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/component_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/component_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/functions.go" beforeDir="false" afterPath="$PROJECT_DIR$/functions.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/template.go" beforeDir="false" afterPath="$PROJECT_DIR$/template.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,7 +119,18 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.Test_translateComponents/test_undefined_component in github.com/mayowa/xtemplate">
+  <component name="RunManager" selected="Go Test.TestNoCache in github.com/mayowa/xtemplate">
+    <configuration name="TestNoCache in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestNoCache\E$" />
+      <method v="2" />
+    </configuration>
     <configuration name="Test_translateComponents in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
@@ -129,17 +140,6 @@
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
       <pattern value="^\QTest_translateComponents\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Test_translateComponents/test_1 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="xtemplate" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/mayowa/xtemplate" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTest_translateComponents\E$/^\Qtest_1\E$" />
       <method v="2" />
     </configuration>
     <configuration name="Test_translateComponents/test_html_attributes in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -176,11 +176,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestNoCache in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.go test github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_translateComponents/test_undefined_component in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_translateComponents in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_translateComponents/test_html_attributes in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.go test github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_translateComponents/test_1 in github.com/mayowa/xtemplate" />
       </list>
     </recent_temporary>
   </component>
@@ -236,7 +236,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/template.go</url>
-          <line>230</line>
+          <line>231</line>
           <option name="timeStamp" value="50" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">

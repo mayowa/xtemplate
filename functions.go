@@ -199,3 +199,7 @@ func MixAsset(publicPath string) func(val string) string {
 		return retv
 	}
 }
+
+func NoCache(file string) string {
+	return fmt.Sprint(file, "?t=", time.Now().UnixNano())
+}
