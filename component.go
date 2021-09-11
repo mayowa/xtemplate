@@ -134,7 +134,7 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 		cCount++
 		cTpl, err := getComponentTemplate(tag.ID, tplFolder, tpl.ext)
 		if err != nil {
-			continue
+			return src, err
 		}
 
 		argStr := "kwargs"
@@ -523,6 +523,16 @@ func getComponentTemplate(name, folder, ext string) (contents []byte, err error)
 	fleName := filepath.Join(folder, name+"."+ext)
 	contents, err = ioutil.ReadFile(fleName)
 
+	if err != nil {
+		contents = []byte(fmt.Sprintf(`
+<div>
+	{{block "#slot--unknown" .}}
+		unknown component %s
+	{{end}}
+</div>
+`, name))
+		return contents, nil
+	}
 	return
 }
 

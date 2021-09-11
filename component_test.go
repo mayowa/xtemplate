@@ -9,9 +9,10 @@ import (
 func Test_translateComponents(t *testing.T) {
 
 	tests := []struct {
-		name string
-		src  string
-		out  string
+		name    string
+		src     string
+		out     string
+		wantErr bool
 	}{
 		{
 			name: "test 1",
@@ -163,17 +164,53 @@ func Test_translateComponents(t *testing.T) {
         {{end -}}
 			`,
 		},
+		{
+			name: "test undefined component",
+			src: `
+			<component type="boxer" class="red">
+				whats in a box?
+			</component>
+			
+			<component type="cards">
+				
+				<slot name="title">whats in a card?</slot>
+			</component>			
+			`,
+			out: `
+        			{{- block "component__boxer__1" . -}}
+        {{- $props := (kwargs "class" "red") -}}
+        
+        <div>
+        	{{block "boxer__1__unknown" .}}
+        		unknown component boxer
+        	{{end}}
+        </div>
+        
+        {{end -}}
+        			
+        			{{- block "component__cards__2" . -}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
+        <div>
+        	{{block "cards__2__unknown" .}}
+        		unknown component cards
+        	{{end}}
+        </div>
+        
+        {{end -}}					
+			`,
+		},
 	}
 
 	xt := New("./samples", "html")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			src, err := translateComponents(xt, Document(tt.src))
-			if err != nil {
+			if (err != nil) != tt.wantErr {
 				t.Fatal(err)
 			}
 
-			if diff.TrimLinesInString(tt.out) != diff.TrimLinesInString(string(src)) {
+			if !tt.wantErr && diff.TrimLinesInString(tt.out) != diff.TrimLinesInString(string(src)) {
 				t.Errorf("got:\n%s, \nwant:\n%s", string(src), tt.out)
 			}
 		})
