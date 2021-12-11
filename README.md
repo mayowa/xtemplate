@@ -51,7 +51,9 @@ rendering child.html will output
 Hello from child footer
 ```
 
-## Syntax sugar: c like function calls
+## Syntax sugar
+
+### C like function calls
 
 ```html
 
@@ -62,7 +64,7 @@ instead of
 
 ```
 
-## Syntax sugar: template calls
+## make template calls look like calling functions
 
 use defined template blocks (imported using the include directive)
 

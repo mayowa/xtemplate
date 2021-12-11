@@ -241,3 +241,20 @@ func TestExtractedTemplates(t *testing.T) {
 		buff.String(),
 	)
 }
+
+func TestPartials(t *testing.T) {
+
+	xt := New("./samples", "html")
+	data := map[string]interface{}{
+		"name": "dinma", "age": 18,
+	}
+
+	buff := bytes.NewBufferString("")
+	if err := xt.Render(buff, "partials", data, true); err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(t, "\n<div>label: dinma</div>\n\n\n<div>box: 18</div>\n\n", buff.String())
+	assert.Nil(t, xt.Lookup("plain.html"))
+}

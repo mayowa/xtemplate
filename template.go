@@ -36,19 +36,12 @@ var actRe = regexp.MustCompile(`\-*[[:blank:]]*{{ *(.+?) *\"(.+?)\" *}}[[:blank:
 // {{ template button(123) }}
 var tplRe = regexp.MustCompile(`{{\-*\s*(macro|template)\s*([a-zA-Z0-9\-_]+)\s*\((.*?)\)\s*\-*}}`)
 
-// {"attri":v, "attr2":"val2"}
-var mapRe = regexp.MustCompile(`(?s)[\,|\(|\s]\{\s?(.+)\s?\}`)
-
-// {"attri":v, "attr2":"val2"} --> [["attr1", "v"],["attr2", "val2"]]
-var atrRe = regexp.MustCompile(`(?s)\"([a-zA-Z0-9\-]+)\" *: *([\"\d\w-\:\(\)\{\}]+[^\}^\^,)])`)
-
 // <tag (attr)>(content)</tag>
 var tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
 
 // {{template "tplName"}}
 // {{template "tplName" . }}
 // {{template "tplName" $ }}
-var tagRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
 var tplRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
 
 // New create new instance of XTemplate
@@ -259,7 +252,7 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 
 	if fm != nil && len(fm.Include) > 0 {
 		for i := range fm.Include {
-			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
+			fm.Include[i] = IncludeFile(filepath.Join(s.folder, string(fm.Include[i])))
 		}
 		_, err = parseFiles(s, tpl, s.folder, s.ext, fm.Include...)
 		if err != nil {
@@ -278,8 +271,8 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 }
 
 type frontMatter struct {
-	Master  string   `yaml:"master"`
-	Include []string `yaml:"include"`
+	Master  string        `yaml:"master"`
+	Include []IncludeFile `yaml:"include"`
 }
 
 func getFilename(folder, name, ext string) (fileName string, tplName string) {
@@ -298,24 +291,15 @@ func getFilename(folder, name, ext string) (fileName string, tplName string) {
 }
 
 func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
-	fle, name := getFilename(s.folder, name, s.ext)
-
-	// read template into a buffer
-	fleContent, err := ioutil.ReadFile(fle)
+	tplName, fm, fleContent, err := s.readTemplate(name)
 	if err != nil {
 		return nil, err
 	}
 
-	var fm *frontMatter
-	fleContent, fm, err = preProcess(s, fleContent)
-	if err != nil {
-		return nil, err
-	}
-
-	// if template doesn't contains frontmatter
+	// if template doesn't contains front matter
 	if fm == nil {
-		// this template doesn't contain frontmatter, create template and return
-		tpl, err := s.makeTemplate(name, fleContent)
+		// this template doesn't contain front matter, create template and return
+		tpl, err := s.makeTemplate(tplName, fleContent)
 		if err != nil {
 			return nil, err
 		}
@@ -345,10 +329,14 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		}
 	}
 
-	// parse includes if requested
+	if err := s.parsePartials(tpl); err != nil {
+		return nil, err
+	}
+
+	// parse included templates (if any)
 	if len(fm.Include) > 0 {
 		for i := range fm.Include {
-			fm.Include[i] = filepath.Join(s.folder, fm.Include[i])
+			fm.Include[i] = IncludeFile(filepath.Join(s.folder, string(fm.Include[i])))
 		}
 		_, err = parseFiles(s, tpl, s.folder, s.ext, fm.Include...)
 		if err != nil {
@@ -359,33 +347,85 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	return tpl, nil
 }
 
+func (s *XTemplate) readTemplate(name string) (tplName string, fm *frontMatter, content []byte, err error) {
+	var fle string
+	fle, tplName = getFilename(s.folder, name, s.ext)
+
+	// read template into a buffer
+	content, err = ioutil.ReadFile(fle)
+	if err != nil {
+		return
+	}
+
+	// convert extras into standard go template 
+	content, fm, err = preProcess(s, content)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Template, error) {
 	tpl, err := s.shared.Clone()
 	if err != nil {
 		return nil, err
 	}
 
+	if len(content) == 0 {
+		return tpl.New(name), nil
+	}
+
 	return tpl.New(name).Parse(string(content))
 }
 
+func (s *XTemplate) parsePartials(tpl *template.Template) error {
+	path := filepath.Join(s.folder, "_partials")
+	fi, err := os.Lstat(path)
+	if err != nil {
+		return nil
+	}
+	if !fi.IsDir() {
+		return nil
+	}
+
+	_, err = tpl.ParseGlob(path + "/*." + s.ext)
+	return err
+}
+
+type IncludeFile string
+
+func (i IncludeFile) Name() string {
+	p := strings.Split(string(i), "|")
+	return p[0]
+}
+func (i IncludeFile) String() string {
+	return i.Name()
+}
+func (i IncludeFile) FromTemplateAction() bool {
+	p := strings.Split(string(i), "|")
+	return len(p) > 1 && p[1] == "ta"
+}
+func (i *IncludeFile) SetTemplateActionFlag() {
+	if strings.HasSuffix((*i).String(), "|ta") {
+		return
+	}
+
+	*i += "|ta"
+}
+
 // parseFiles expects filenames to have extensions
-func parseFiles(xt *XTemplate, t *template.Template, baseFolder, ext string, filenames ...string) (*template.Template, error) {
+func parseFiles(xt *XTemplate, t *template.Template, baseFolder, ext string, filenames ...IncludeFile) (*template.Template, error) {
 	baseFolder = filepath.Join(baseFolder) + "/"
 
 	for _, filename := range filenames {
-		p := strings.Split(filename, "|")
-		filename = p[0]
-		fromTplAction := false
-		if len(p) > 1 && p[1] == "ta" {
-			fromTplAction = true
-		}
 
-		filename, name := getFilename("", filename, ext)
-		b, err := ioutil.ReadFile(filename)
+		fName, name := getFilename("", filename.Name(), ext)
+		b, err := ioutil.ReadFile(fName)
 		if err != nil {
-			if fromTplAction {
+			if filename.FromTemplateAction() {
 				// this template was referenced in a {{template "name"}} action
-				// and included by extractTemplates so its possible that its
+				// and included by extractTemplates so it's possible that it's
 				// not an actual file but a template defined elsewhere
 				continue
 			}
@@ -464,7 +504,7 @@ func extractTemplates(re *regexp.Regexp, fm *frontMatter, fleContent []byte) *fr
 	for _, i := range matches {
 		parts := re.FindStringSubmatch(string(i))
 		if len(parts) >= 2 {
-			fm.Include = append(fm.Include, parts[1]+"|ta")
+			fm.Include = append(fm.Include, IncludeFile(parts[1]+"|ta"))
 		}
 	}
 
@@ -595,7 +635,7 @@ func extractFrontMatter(re *regexp.Regexp, src []byte) (*frontMatter, []byte) {
 			return []byte("")
 
 		case "include":
-			fm.Include = append(fm.Include, string(parts[2]))
+			fm.Include = append(fm.Include, IncludeFile(parts[2]))
 			return []byte("")
 		}
 
