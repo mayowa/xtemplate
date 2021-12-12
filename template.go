@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -357,7 +358,7 @@ func (s *XTemplate) readTemplate(name string) (tplName string, fm *frontMatter, 
 		return
 	}
 
-	// convert extras into standard go template 
+	// convert extras into standard go template
 	content, fm, err = preProcess(s, content)
 	if err != nil {
 		return
@@ -389,7 +390,32 @@ func (s *XTemplate) parsePartials(tpl *template.Template) error {
 		return nil
 	}
 
-	_, err = tpl.ParseGlob(path + "/*." + s.ext)
+	root := strings.TrimPrefix(s.folder, "/")
+	root = strings.TrimPrefix(root, "./")
+
+	// _, err = tpl.ParseGlob(path + "/*." + s.ext)
+	err = filepath.Walk(path, func(name string, info fs.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		// log.Println(s.folder, name, info.Name(), strings.TrimPrefix(name, root))
+
+		tplName, _, content, err := s.readTemplate(strings.TrimPrefix(name, root))
+		if err != nil {
+			return err
+		}
+
+		_, err = tpl.New(tplName).Parse(string(content))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 

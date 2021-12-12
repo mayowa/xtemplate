@@ -6,10 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug/main.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/template.go" beforeDir="false" afterPath="$PROJECT_DIR$/template.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/template_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/template_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,6 +47,7 @@
     </file-type-list>
   </component>
   <component name="GitToolBoxStore">
+    <option name="projectConfigVersion" value="4" />
     <option name="recentBranches">
       <RecentBranches>
         <option name="branchesForRepo">
@@ -131,7 +129,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test github.com/mayowa/xtemplate">
+  <component name="RunManager" selected="Go Test.TestPartials in github.com/mayowa/xtemplate">
     <configuration name="TestExtractedTemplates in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
@@ -188,8 +186,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.go test github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.TestPartials in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.go test github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.TestMasterChild in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.TestExtractedTemplates in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.TestIgnoreCache in github.com/mayowa/xtemplate" />
@@ -237,7 +235,8 @@
     <MESSAGE value="fix endless loop, components now use type instead of id" />
     <MESSAGE value="detect type|id|class|style attributes" />
     <MESSAGE value="Update readme" />
-    <option name="LAST_COMMIT_MESSAGE" value="Update readme" />
+    <MESSAGE value="Parse partials in the _partials folder" />
+    <option name="LAST_COMMIT_MESSAGE" value="Parse partials in the _partials folder" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -247,7 +246,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/template.go</url>
-          <line>224</line>
+          <line>225</line>
           <option name="timeStamp" value="50" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
@@ -262,12 +261,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/template.go</url>
-          <line>206</line>
+          <line>207</line>
           <option name="timeStamp" value="56" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/template.go</url>
-          <line>299</line>
+          <line>300</line>
           <option name="timeStamp" value="57" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
