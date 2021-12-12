@@ -58,14 +58,18 @@ func New(folder, ext string) *XTemplate {
 	}
 
 	funcs := template.FuncMap{
-		"args":    args,
-		"kwargs":  kwargs,
-		"title":   capitalize,
-		"lower":   lower,
-		"upper":   upper,
-		"json":    marshalJSON,
-		"tag":     tags,
-		"nocache": NoCache,
+		"args":         args,
+		"kwargs":       kwargs,
+		"title":        capitalize,
+		"lower":        lower,
+		"upper":        upper,
+		"json":         marshalJSON,
+		"tag":          tags,
+		"nocache":      NoCache,
+		"valOrDefault": getDefault,
+		"formatDate":   formatDate,
+		"formatCDate":  formatCDate,
+		"isEmpty":      IsEmpty,
 	}
 	xt.funcs = funcs
 

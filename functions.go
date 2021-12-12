@@ -36,10 +36,15 @@ func upper(val string) string {
 	return strings.ToUpper(val)
 }
 
-func getDefault(val, defa interface{}) interface{} {
+func getDefault(values ...interface{}) interface{} {
+	if len(values) == 0 {
+		return nil
+	}
+	val := values[0]
 	v := reflect.ValueOf(val)
 	if v.IsZero() || v.IsNil() {
-		return defa
+
+		return values[1]
 	}
 
 	return val
@@ -202,4 +207,25 @@ func MixAsset(publicPath string) func(val string) string {
 
 func NoCache(file string) string {
 	return fmt.Sprint(file, "?t=", time.Now().UnixNano())
+}
+
+func IsEmpty(val interface{}) bool {
+	if val == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(val)
+	if v.Type().Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return true
+		}
+
+		v = reflect.Indirect(v)
+	}
+
+	if v.IsZero() {
+		return true
+	}
+
+	return false
 }
