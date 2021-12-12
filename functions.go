@@ -36,20 +36,6 @@ func upper(val string) string {
 	return strings.ToUpper(val)
 }
 
-func getDefault(values ...interface{}) interface{} {
-	if len(values) == 0 {
-		return nil
-	}
-	val := values[0]
-	v := reflect.ValueOf(val)
-	if v.IsZero() || v.IsNil() {
-
-		return values[1]
-	}
-
-	return val
-}
-
 func args(val ...interface{}) interface{} {
 	return val
 }
@@ -228,4 +214,20 @@ func IsEmpty(val interface{}) bool {
 	}
 
 	return false
+}
+
+// IfEmpty if val is empty return the first non-empty item in values
+func IfEmpty(val interface{}, values ...interface{}) interface{} {
+
+	if IsEmpty(val) {
+		for _, v := range values {
+			if !IsEmpty(v) {
+				return v
+			}
+
+			return values[0]
+		}
+	}
+
+	return val
 }
