@@ -43,7 +43,7 @@ var tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
 // {{template "tplName"}}
 // {{template "tplName" . }}
 // {{template "tplName" $ }}
-var tplRe2 = regexp.MustCompile(`{{\-*\s*template\s*\"([a-zA-Z-0-9/\_\.]+)\"\s*([\.\$]?[\$a-zA-Z0-9\_]*)\s*\-*}}`)
+var tplRe2 = regexp.MustCompile(`{{\-*\s*template\s+"([\w/_.]+)"\s*([.$\w\s_"]*)\s*\-*}}`)
 
 // New create new instance of XTemplate
 func New(folder, ext string) *XTemplate {
@@ -301,20 +301,20 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		return nil, err
 	}
 
-	// if template doesn't contains front matter
-	if fm == nil {
-		// this template doesn't contain front matter, create template and return
-		tpl, err := s.makeTemplate(tplName, fleContent)
-		if err != nil {
-			return nil, err
-		}
+	/*	// if template doesn't contains front matter
+		if fm == nil {
+			// this template doesn't contain front matter, create template and return
+			tpl, err := s.makeTemplate(tplName, fleContent)
+			if err != nil {
+				return nil, err
+			}
 
-		return tpl, nil
-	}
+			return tpl, nil
+		}*/
 
 	var tpl *template.Template
 
-	if len(fm.Master) > 0 {
+	if fm != nil && len(fm.Master) > 0 {
 		// get the master template
 		master, err := s.getTemplate(fm.Master)
 		if err != nil {
@@ -328,7 +328,7 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		}
 	} else {
 		// create template
-		tpl, err = s.makeTemplate(name, fleContent)
+		tpl, err = s.makeTemplate(tplName, fleContent)
 		if err != nil {
 			return nil, err
 		}
@@ -339,7 +339,7 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	}
 
 	// parse included templates (if any)
-	if len(fm.Include) > 0 {
+	if fm != nil && len(fm.Include) > 0 {
 		for i := range fm.Include {
 			fm.Include[i] = IncludeFile(filepath.Join(s.folder, string(fm.Include[i])))
 		}

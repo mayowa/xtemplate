@@ -249,14 +249,32 @@ func TestPartials(t *testing.T) {
 		"name": "dinma", "age": 18,
 	}
 
-	buff := bytes.NewBufferString("")
-	if err := xt.Render(buff, "partials", data, true); err != nil {
-		t.Error(err)
-		return
+	tests := []struct {
+		name     string
+		tpl      string
+		expected string
+	}{
+		{name: "partials", tpl: "partials",
+			expected: "\n<div>label: dinma</div>\n\n\n<div>box: 18</div>\n\n"},
+		{name: "sub/partials", tpl: "sub/partials",
+			expected: "\n<div>label: map[label:Email address name:email type:email]</div>\n\n\n<div>box: 18</div>\n\n"},
+		{name: "overlay4", tpl: "overlay4",
+			expected: "The Base\n\n\n\n<div>label: map[age:18 name:dinma]</div>\n\n"},
+		{name: "sub/overlay4", tpl: "sub/overlay4",
+			expected: "The Base\n\n\n<div class=\"h-full\">\n\t<div class=\"bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10\">\n\t\t\n<div>label: map[label:Email address name:email type:email]</div>\n\n\n\t\t\n\t</div>\n</div>\n\n"},
 	}
 
-	assert.Equal(t, "\n<div>label: dinma</div>\n\n\n<div>box: 18</div>\n\n", buff.String())
-	assert.Nil(t, xt.Lookup("plain.html"))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buff := bytes.NewBufferString("")
+			if err := xt.Render(buff, tt.tpl, data, true); err != nil {
+				t.Error(err)
+				return
+			}
+			assert.Equal(t, tt.expected, buff.String())
+		})
+	}
+
 }
 
 func TestTemplateInclude(t *testing.T) {
@@ -272,6 +290,6 @@ func TestTemplateInclude(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "The Base\n\n\n<h1>The body</h1>\n<header>\n\t<h2>To be included</h2>\n\t<input type=\"text\" value=\"search\">\n</header>\n\n", buff.String())
+	assert.Equal(t, "The Base\n\n\n<h1>The body</h1>\n<header>\n\t<h2>To be included</h2>\n\t\n<div>input: map[age:18 name:dinma]</div>\n\n</header>\n\n", buff.String())
 	assert.Nil(t, xt.Lookup("plain.html"))
 }

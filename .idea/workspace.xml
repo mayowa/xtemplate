@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
+    <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="Get rid of extra partials parse, test template include in child">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/include.html" beforeDir="false" afterPath="$PROJECT_DIR$/samples/include.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/template.go" beforeDir="false" afterPath="$PROJECT_DIR$/template.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/template_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/template_test.go" afterDir="false" />
     </list>
@@ -122,13 +123,14 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/samples" />
+      <recent name="$PROJECT_DIR$/samples/sub" />
       <recent name="$PROJECT_DIR$/samples/_partials" />
       <recent name="$PROJECT_DIR$/samples/_components" />
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test github.com/mayowa/xtemplate">
-    <configuration name="TestIfEmpty in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Go Test.TestPartials/sub/overlay4 in github.com/mayowa/xtemplate">
+    <configuration name="TestPartials in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -136,10 +138,10 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestIfEmpty\E$" />
+      <pattern value="^\QTestPartials\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestTemplateInclude in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestPartials/sub/overlay4 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -147,10 +149,10 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestTemplateInclude\E$" />
+      <pattern value="^\QTestPartials\E$/^\Qsub\E$/^\Qoverlay4\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="Test_getDefault in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestPartials/sub/partials in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -158,10 +160,10 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTest_getDefault\E$" />
+      <pattern value="^\QTestPartials\E$/^\Qsub\E$/^\Qpartials\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="Test_getDefault/map_non_existent_key in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestPartials/subs/overlay4 in github.com/mayowa/xtemplate (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -169,7 +171,7 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTest_getDefault\E$/^\Qmap_non_existent_key\E$" />
+      <pattern value="^\QTestPartials\E$/^\Qsubs\E$/^\Qoverlay4\E$" />
       <method v="2" />
     </configuration>
     <configuration name="go test github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -184,11 +186,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestPartials/sub/overlay4 in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestPartials in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.go test github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.TestTemplateInclude in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.TestIfEmpty in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_getDefault/map_non_existent_key in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_getDefault in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestPartials/sub/partials in github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestPartials/subs/overlay4 in github.com/mayowa/xtemplate (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -237,7 +239,9 @@
     <MESSAGE value="Reimplement parsePartials" />
     <MESSAGE value="Add template functions" />
     <MESSAGE value="Reimplement valOrDefault" />
-    <option name="LAST_COMMIT_MESSAGE" value="Reimplement valOrDefault" />
+    <MESSAGE value="Get rid of extra partial parse, test template include in child" />
+    <MESSAGE value="Get rid of extra partials parse, test template include in child" />
+    <option name="LAST_COMMIT_MESSAGE" value="Get rid of extra partials parse, test template include in child" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -267,8 +271,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/template.go</url>
-          <line>304</line>
-          <option name="timeStamp" value="57" />
+          <line>298</line>
+          <option name="timeStamp" value="61" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
