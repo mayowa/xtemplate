@@ -258,3 +258,20 @@ func TestPartials(t *testing.T) {
 	assert.Equal(t, "\n<div>label: dinma</div>\n\n\n<div>box: 18</div>\n\n", buff.String())
 	assert.Nil(t, xt.Lookup("plain.html"))
 }
+
+func TestTemplateInclude(t *testing.T) {
+
+	xt := New("./samples", "html")
+	data := map[string]interface{}{
+		"name": "dinma", "age": 18,
+	}
+
+	buff := bytes.NewBufferString("")
+	if err := xt.Render(buff, "overlay3", data, true); err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(t, "The Base\n\n\n<h1>The body</h1>\n<header>\n\t<h2>To be included</h2>\n\t<input type=\"text\" value=\"search\">\n</header>\n\n", buff.String())
+	assert.Nil(t, xt.Lookup("plain.html"))
+}

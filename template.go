@@ -332,10 +332,10 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	if err := s.parsePartials(tpl); err != nil {
-		return nil, err
+		if err := s.parsePartials(tpl); err != nil {
+			return nil, err
+		}
 	}
 
 	// parse included templates (if any)

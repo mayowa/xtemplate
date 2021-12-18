@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="Add template functions">
+    <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/functions.go" beforeDir="false" afterPath="$PROJECT_DIR$/functions.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/functions_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/functions_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/template.go" beforeDir="false" afterPath="$PROJECT_DIR$/template.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/template_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/template_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +112,7 @@
     <property name="go.modules.go.list.on.any.changes.was.set" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.watchers.conflict.with.on.save.actions.check.performed" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/samples/_partials" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/samples" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
@@ -122,13 +121,13 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/samples/_partials" />
       <recent name="$PROJECT_DIR$/samples" />
+      <recent name="$PROJECT_DIR$/samples/_partials" />
       <recent name="$PROJECT_DIR$/samples/_components" />
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.TestIfEmpty in github.com/mayowa/xtemplate">
+  <component name="RunManager" selected="Go Test.go test github.com/mayowa/xtemplate">
     <configuration name="TestIfEmpty in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
@@ -138,6 +137,17 @@
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
       <pattern value="^\QTestIfEmpty\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestTemplateInclude in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="xtemplate" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/mayowa/xtemplate" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestTemplateInclude\E$" />
       <method v="2" />
     </configuration>
     <configuration name="Test_getDefault in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -162,7 +172,7 @@
       <pattern value="^\QTest_getDefault\E$/^\Qmap_non_existent_key\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="Test_getDefault/map_val in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="go test github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -170,27 +180,15 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTest_getDefault\E$/^\Qmap_val\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Test_getDefault/string_val in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="xtemplate" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/mayowa/xtemplate" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTest_getDefault\E$/^\Qstring_val\E$" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.go test github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.TestTemplateInclude in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.TestIfEmpty in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_getDefault/map_non_existent_key in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_getDefault in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_getDefault/string_val in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_getDefault/map_val in github.com/mayowa/xtemplate" />
       </list>
     </recent_temporary>
   </component>
@@ -238,7 +236,8 @@
     <MESSAGE value="Parse partials in the _partials folder" />
     <MESSAGE value="Reimplement parsePartials" />
     <MESSAGE value="Add template functions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add template functions" />
+    <MESSAGE value="Reimplement valOrDefault" />
+    <option name="LAST_COMMIT_MESSAGE" value="Reimplement valOrDefault" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -271,16 +270,11 @@
           <line>304</line>
           <option name="timeStamp" value="57" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/template_test.go</url>
-          <line>53</line>
-          <option name="timeStamp" value="59" />
-        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="GoTestRunConfiguration">
-        <watch expression="templateContent[i]" />
+        <watch expression="tpl.Lookup(&quot;include&quot;)" language="go" />
       </configuration>
     </watches-manager>
   </component>
