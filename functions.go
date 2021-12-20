@@ -195,6 +195,7 @@ func NoCache(file string) string {
 	return fmt.Sprint(file, "?t=", time.Now().UnixNano())
 }
 
+// IsEmpty returns true if val is nil empty (nil or a zero value for its type)
 func IsEmpty(val interface{}) bool {
 	if val == nil {
 		return true

@@ -262,6 +262,8 @@ func TestPartials(t *testing.T) {
 			expected: "The Base\n\n\n\n<div>label: map[age:18 name:dinma]</div>\n\n"},
 		{name: "sub/overlay4", tpl: "sub/overlay4",
 			expected: "The Base\n\n\n<div class=\"h-full\">\n\t<div class=\"bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10\">\n\t\t\n<div>label: map[label:Email address name:email type:email]</div>\n\n\n\t\t\n\t</div>\n</div>\n\n"},
+		{name: "include", tpl: "overlay3",
+			expected: "The Base\n\n\n<h1>The body</h1>\n<header>\n\t<h2>To be included</h2>\n\t\n<div>input: map[age:18 name:dinma]</div>\n\n</header>\n\n"},
 	}
 
 	for _, tt := range tests {
@@ -277,19 +279,43 @@ func TestPartials(t *testing.T) {
 
 }
 
-func TestTemplateInclude(t *testing.T) {
-
-	xt := New("./samples", "html")
-	data := map[string]interface{}{
-		"name": "dinma", "age": 18,
+func Test_getFilename(t *testing.T) {
+	type args struct {
+		folder string
+		name   string
+		ext    string
+	}
+	tests := []struct {
+		name         string
+		args         args
+		wantFileName string
+		wantTplName  string
+	}{
+		{
+			name:         "test 1",
+			args:         args{folder: "base", name: "file.ext", ext: "ext"},
+			wantFileName: "base/file.ext",
+			wantTplName:  "file",
+		},
+		{
+			name:         "test 2",
+			args:         args{folder: "base", name: "file", ext: "ext"},
+			wantFileName: "base/file.ext",
+			wantTplName:  "file",
+		},
+		{
+			name:         "test 3",
+			args:         args{folder: "base", name: "file.part", ext: "ext"},
+			wantFileName: "base/file.part.ext",
+			wantTplName:  "file.part",
+		},
 	}
 
-	buff := bytes.NewBufferString("")
-	if err := xt.Render(buff, "overlay3", data, true); err != nil {
-		t.Error(err)
-		return
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotFileName, gotTplName := getFilename(tt.args.folder, tt.args.name, tt.args.ext)
+			assert.Equalf(t, tt.wantFileName, gotFileName, "getFilename(%v, %v, %v)", tt.args.folder, tt.args.name, tt.args.ext)
+			assert.Equalf(t, tt.wantTplName, gotTplName, "getFilename(%v, %v, %v)", tt.args.folder, tt.args.name, tt.args.ext)
+		})
 	}
-
-	assert.Equal(t, "The Base\n\n\n<h1>The body</h1>\n<header>\n\t<h2>To be included</h2>\n\t\n<div>input: map[age:18 name:dinma]</div>\n\n</header>\n\n", buff.String())
-	assert.Nil(t, xt.Lookup("plain.html"))
 }

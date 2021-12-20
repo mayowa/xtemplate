@@ -283,13 +283,13 @@ type frontMatter struct {
 func getFilename(folder, name, ext string) (fileName string, tplName string) {
 	fle := filepath.Join(folder, name)
 	// add a file extension if one isn't provided
-	if filepath.Ext(fle) == "" {
+	if !strings.HasSuffix(name, "."+ext) {
 		fle += "." + ext
 	}
 
 	// remove file extension if one is provided
-	if filepath.Ext(name) != "" {
-		name = strings.Replace(name, filepath.Ext(name), "", 1)
+	if strings.HasSuffix(name, "."+ext) {
+		name = strings.Replace(name, "."+ext, "", 1)
 	}
 
 	return fle, name
@@ -341,7 +341,14 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	// parse included templates (if any)
 	if fm != nil && len(fm.Include) > 0 {
 		for i := range fm.Include {
-			fm.Include[i] = IncludeFile(filepath.Join(s.folder, string(fm.Include[i])))
+			iNme := string(fm.Include[i])
+			_, nme := getFilename(s.folder, iNme, s.ext)
+			if tpl.Lookup(IncludeFile(nme).Name()) != nil {
+				// template exists as a partial
+				continue
+			}
+
+			fm.Include[i] = IncludeFile(filepath.Join(s.folder, iNme))
 		}
 		_, err = parseFiles(s, tpl, s.folder, s.ext, fm.Include...)
 		if err != nil {
