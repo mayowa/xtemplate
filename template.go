@@ -406,9 +406,16 @@ func (s *XTemplate) parsePartials(tpl *template.Template) error {
 
 	// _, err = tpl.ParseGlob(path + "/*." + s.ext)
 	err = filepath.Walk(path, func(name string, info fs.FileInfo, err error) error {
+		// skip folders
 		if info.IsDir() {
 			return nil
 		}
+
+		// skip files with different extensions
+		if !strings.HasSuffix(name, s.ext) {
+			return nil
+		}
+
 		// log.Println(s.folder, name, info.Name(), strings.TrimPrefix(name, root))
 
 		tplName, _, content, err := s.readTemplate(strings.TrimPrefix(name, root))

@@ -1,6 +1,7 @@
 package xtemplate
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/andreyvit/diff"
@@ -221,9 +222,10 @@ func Test_translateComponents(t *testing.T) {
 func Test_renderComponents(t *testing.T) {
 
 	tests := []struct {
-		name string
-		src  string
-		out  string
+		name     string
+		src      string
+		out      string
+		srcIsTpl bool
 	}{
 		{
 			name: "test 1",
@@ -239,15 +241,35 @@ func Test_renderComponents(t *testing.T) {
         </div>			
 			`,
 		},
+		{
+			name:     "test 2",
+			srcIsTpl: true,
+			src:      "component",
+			out: `
+        <div class="box">
+        	whats in a box red bread?
+        			
+        </div>			
+			`,
+		},
 	}
 
-	xt := New("./samples", "html")
+	xt := New("./samples", "tmpl")
 	data := map[string]interface{}{"name": "bread"}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			src, err := xt.RenderString(tt.src, data)
+			var (
+				src string
+				err error
+			)
+			if !tt.srcIsTpl {
+				src, err = xt.RenderString(tt.src, data)
+			} else {
+				buff := bytes.NewBufferString("")
+				err = xt.Render(buff, tt.src, data, true)
+				src = buff.String()
+			}
 			if err != nil {
 				t.Fatal(err)
 			}
