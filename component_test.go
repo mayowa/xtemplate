@@ -166,6 +166,25 @@ func Test_translateComponents(t *testing.T) {
 			`,
 		},
 		{
+			name: "test html attributes 2",
+			src: `
+			<component type="colorbox" class="red"></component>
+			`,
+			out: `
+      {{- block "component__colorbox__1" . -}}
+        {{- $props := (kwargs "class" "red") -}}
+        <div class="box">
+        	{{block "colorbox__1__default" .}}
+        {{- $props := (kwargs "class" "red") -}}
+        
+        		a {{$props.class}} box
+        	{{end}}
+        </div>
+        
+      {{end -}}
+			`,
+		},
+		{
 			name: "test undefined component",
 			src: `
 			<component type="boxer" class="red">
@@ -231,7 +250,7 @@ func Test_renderComponents(t *testing.T) {
 			name: "test 1",
 			src: `
 			<component type="box" class="red">
-				whats in a box {{$props.class}} {{.name}}?
+				whats in a box {{$props.class}} {{.name}}?    
 			</component>
 			`,
 			out: `

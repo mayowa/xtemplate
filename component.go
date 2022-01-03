@@ -229,6 +229,11 @@ func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slo
 			slotBody = fmt.Sprintf("\n{{- $props := (%s) -}}\n%s", props, slotBody)
 		}
 		newAction.Replace([]byte(action.Body), []byte(slotBody), 1)
+	} else {
+		if len(props) > 0 {
+			slotBody = fmt.Sprintf("\n{{- $props := (%s) -}}\n%s", props, action.Body)
+			newAction.Replace([]byte(action.Body), []byte(slotBody), 1)
+		}
 	}
 
 	// replace template action
