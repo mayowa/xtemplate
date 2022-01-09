@@ -18,11 +18,13 @@ import (
 
 // XTemplate ...
 type XTemplate struct {
-	folder string
-	ext    string
-	shared *template.Template
-	cache  map[string]*template.Template
-	funcs  template.FuncMap
+	rootFolder       string
+	partialsFolder   string
+	componentsFolder string
+	ext              string
+	shared           *template.Template
+	cache            map[string]*template.Template
+	funcs            template.FuncMap
 }
 
 // {{ ...  }}
@@ -45,14 +47,34 @@ var tagRe = regexp.MustCompile(`<tag(\s+[^>]+)?>((.|\n)*?)</tag>([\s]*</tag>)?`)
 // {{template "tplName" $ }}
 var tplRe2 = regexp.MustCompile(`{{\-*\s*template\s+"([\w/_.]+)"\s*([.$\w\s_"]*)\s*\-*}}`)
 
+type Config struct {
+	RootFolder       string
+	PartialsFolder   string
+	ComponentsFolder string
+	Ext              string
+	Funcs            template.FuncMap
+}
+
 // New create new instance of XTemplate
-func New(folder, ext string) *XTemplate {
+func New(cfg Config) *XTemplate {
 
 	xt := new(XTemplate)
 	xt.cache = make(map[string]*template.Template)
-	xt.folder = folder
+	xt.rootFolder = cfg.RootFolder
+	if xt.rootFolder == "" {
+		xt.rootFolder = "./templates"
+	}
+	xt.partialsFolder = cfg.PartialsFolder
+	if xt.partialsFolder == "" {
+		xt.partialsFolder = filepath.Join(xt.rootFolder, "_partials")
+	}
+	xt.componentsFolder = cfg.ComponentsFolder
+	if xt.componentsFolder == "" {
+		xt.componentsFolder = filepath.Join(xt.rootFolder, "_components")
+	}
+
 	xt.shared = template.New("")
-	xt.ext = ext
+	xt.ext = cfg.Ext
 	if xt.ext == "" {
 		xt.ext = "html"
 	}
@@ -71,7 +93,13 @@ func New(folder, ext string) *XTemplate {
 		"formatCDate": formatCDate,
 		"isEmpty":     IsEmpty,
 	}
+
 	xt.funcs = funcs
+	if len(cfg.Funcs) > 0 {
+		for k, v := range cfg.Funcs {
+			xt.funcs[k] = v
+		}
+	}
 
 	xt.shared.Funcs(xt.funcs)
 	return xt
@@ -126,7 +154,7 @@ func (s *XTemplate) ParseFile(name string) error {
 	}
 
 	// cache template
-	_, name = getFilename(s.folder, name, s.ext)
+	_, name = getFilename(s.rootFolder, name, s.ext)
 	s.cache[name] = tpl
 
 	return nil
@@ -257,9 +285,9 @@ func (s *XTemplate) RenderString(tplStr string, data interface{}) (string, error
 
 	if fm != nil && len(fm.Include) > 0 {
 		for i := range fm.Include {
-			fm.Include[i] = IncludeFile(filepath.Join(s.folder, string(fm.Include[i])))
+			fm.Include[i] = IncludeFile(filepath.Join(s.rootFolder, string(fm.Include[i])))
 		}
-		_, err = parseFiles(s, tpl, s.folder, s.ext, fm.Include...)
+		_, err = parseFiles(s, tpl, s.rootFolder, s.ext, fm.Include...)
 		if err != nil {
 			return "", err
 		}
@@ -342,15 +370,15 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 	if fm != nil && len(fm.Include) > 0 {
 		for i := range fm.Include {
 			iNme := string(fm.Include[i])
-			_, nme := getFilename(s.folder, iNme, s.ext)
+			_, nme := getFilename(s.rootFolder, iNme, s.ext)
 			if tpl.Lookup(IncludeFile(nme).Name()) != nil {
 				// template exists as a partial
 				continue
 			}
 
-			fm.Include[i] = IncludeFile(filepath.Join(s.folder, iNme))
+			fm.Include[i] = IncludeFile(filepath.Join(s.rootFolder, iNme))
 		}
-		_, err = parseFiles(s, tpl, s.folder, s.ext, fm.Include...)
+		_, err = parseFiles(s, tpl, s.rootFolder, s.ext, fm.Include...)
 		if err != nil {
 			return nil, err
 		}
@@ -361,7 +389,7 @@ func (s *XTemplate) getTemplate(name string) (*template.Template, error) {
 
 func (s *XTemplate) readTemplate(name string) (tplName string, fm *frontMatter, content []byte, err error) {
 	var fle string
-	fle, tplName = getFilename(s.folder, name, s.ext)
+	fle, tplName = getFilename(s.rootFolder, name, s.ext)
 
 	// read template into a buffer
 	content, err = ioutil.ReadFile(fle)
@@ -392,7 +420,7 @@ func (s *XTemplate) makeTemplate(name string, content []byte) (*template.Templat
 }
 
 func (s *XTemplate) parsePartials(tpl *template.Template) error {
-	path := filepath.Join(s.folder, "_partials")
+	path := filepath.Join(s.partialsFolder)
 	fi, err := os.Lstat(path)
 	if err != nil {
 		return nil
@@ -401,7 +429,7 @@ func (s *XTemplate) parsePartials(tpl *template.Template) error {
 		return nil
 	}
 
-	root := strings.TrimPrefix(s.folder, "/")
+	root := strings.TrimPrefix(s.rootFolder, "/")
 	root = strings.TrimPrefix(root, "./")
 
 	// _, err = tpl.ParseGlob(path + "/*." + s.ext)

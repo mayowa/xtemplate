@@ -31,12 +31,14 @@ func Test_translateComponents(t *testing.T) {
 			</div>			
 			`,
 			out: `        
-       			<div>
+        			<div>
         				{{- block "component__card__1" . -}}
         {{- $props := (kwargs "_blank" "") -}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         		a header
         	{{end}}
         	</div>
@@ -82,6 +84,8 @@ func Test_translateComponents(t *testing.T) {
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         		a header
         	{{end}}
         	</div>
@@ -99,6 +103,8 @@ func Test_translateComponents(t *testing.T) {
         <div class="card">
         	<div class="card__header">
         	{{block "card__3__header" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         		a header
         	{{end}}
         	</div>
@@ -202,6 +208,8 @@ func Test_translateComponents(t *testing.T) {
         
         <div>
         	{{block "boxer__1__unknown" .}}
+        {{- $props := (kwargs "class" "red") -}}
+        
         		unknown component boxer
         	{{end}}
         </div>
@@ -213,6 +221,8 @@ func Test_translateComponents(t *testing.T) {
         
         <div>
         	{{block "cards__2__unknown" .}}
+        {{- $props := (kwargs "_blank" "") -}}
+        
         		unknown component cards
         	{{end}}
         </div>
@@ -222,7 +232,7 @@ func Test_translateComponents(t *testing.T) {
 		},
 	}
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			src, err := translateComponents(xt, Document(tt.src))
@@ -249,7 +259,7 @@ func Test_renderComponents(t *testing.T) {
 		{
 			name: "test 1",
 			src: `
-			<component type="box" class="red">
+			<component type="boxext" class="red">
 				whats in a box {{$props.class}} {{.name}}?    
 			</component>
 			`,
@@ -273,7 +283,7 @@ func Test_renderComponents(t *testing.T) {
 		},
 	}
 
-	xt := New("./samples", "tmpl")
+	xt := New(Config{RootFolder: "./samples", Ext: "tmpl"})
 	data := map[string]interface{}{"name": "bread"}
 
 	for _, tt := range tests {

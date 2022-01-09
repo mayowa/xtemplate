@@ -9,7 +9,7 @@ import (
 
 func TestIgnoreCache(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -26,7 +26,7 @@ func TestIgnoreCache(t *testing.T) {
 
 func TestCache(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -45,7 +45,7 @@ func TestCache(t *testing.T) {
 
 func TestMasterChild(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -61,7 +61,7 @@ func TestMasterChild(t *testing.T) {
 
 func TestIncludes(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -81,7 +81,7 @@ func TestIncludes(t *testing.T) {
 
 func TestSubFolderFile(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -98,7 +98,7 @@ func TestSubFolderFile(t *testing.T) {
 
 func TestFunctionSyntax(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -114,7 +114,7 @@ func TestFunctionSyntax(t *testing.T) {
 
 func TestFunctions(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -138,7 +138,7 @@ func TestFunctions(t *testing.T) {
 
 func TestRenderString(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -162,7 +162,7 @@ func TestRenderString(t *testing.T) {
 
 func TestTranslateTags(t *testing.T) {
 
-	xt := New("", "html")
+	xt := New(Config{RootFolder: "", Ext: "html"})
 	src := []byte(`
 	<tag type="input" class="red sm:red"></tag>
 	<tag type="input" x-data="{'a':1}"></tag>
@@ -182,7 +182,7 @@ func TestTranslateTags(t *testing.T) {
 
 func TestTagsOnly(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -224,7 +224,7 @@ func TestTagsOnly(t *testing.T) {
 
 func TestExtractedTemplates(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
@@ -244,7 +244,7 @@ func TestExtractedTemplates(t *testing.T) {
 
 func TestPartials(t *testing.T) {
 
-	xt := New("./samples", "html")
+	xt := New(Config{RootFolder: "./samples", Ext: "html"})
 	data := map[string]interface{}{
 		"name": "dinma", "age": 18,
 	}
