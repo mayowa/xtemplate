@@ -265,7 +265,8 @@ func Test_renderComponents(t *testing.T) {
 			`,
 			out: `
         <div class="box">
-        	whats in a box red bread?
+        	<p>a red box</p>
+        	whats in a box red bread?    
         			
         </div>			
 			`,
@@ -276,7 +277,23 @@ func Test_renderComponents(t *testing.T) {
 			src:      "component",
 			out: `
         <div class="box">
+        	<p>a red box</p>
         	whats in a box red bread?
+        
+        </div>		
+			`,
+		},
+		{
+			name: "test 3",
+			src: `
+			<component type="attrbox" class="red" size="big">
+				whats in a box {{$props.class}} {{.name}}?    
+			</component>
+			`,
+			out: `
+        <div class="box">
+        	<p>a big red box</p>
+        	whats in a box red bread?    
         			
         </div>			
 			`,

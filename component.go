@@ -53,7 +53,7 @@ import (
 
 // var componentStartRe = regexp.MustCompile(`(?i)<(component|slot)\s+(id|name)="([a-zA-Z0-9\-\_]*?)"\s*>`)
 // var componentEndRe = regexp.MustCompile(`</(component|slot)>`)
-var attrRe = regexp.MustCompile(`(?i)\s(name|type|class|style|id)="([\w\W]*?)"|'([\w\W]*?)'`)
+var attrRe = regexp.MustCompile(`(?i)\s([a-z]*?)="([\w\W]*?)"|'([\w\W]*?)'`)
 var htmlTagRe = regexp.MustCompile(`</*([a-zA-Z]+)([\s="a-zA-Z0-9\-_]*?)>`)
 var actionTagRe = regexp.MustCompile(`{{-*\s*([\w]+)\s?([\s\w"-.$:=]*?)\s*-*}}`)
 var inQuotes = regexp.MustCompile(`"([\s\w#-.$:=]*?)"`)

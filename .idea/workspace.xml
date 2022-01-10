@@ -8,8 +8,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/component.go" beforeDir="false" afterPath="$PROJECT_DIR$/component.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/component_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/component_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/template.go" beforeDir="false" afterPath="$PROJECT_DIR$/template.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/template_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/template_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/_components/boxext.tmpl" beforeDir="false" afterPath="$PROJECT_DIR$/samples/_components/boxext.tmpl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,7 +129,7 @@
       <recent name="$PROJECT_DIR$/samples/_partials" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test github.com/mayowa/xtemplate">
+  <component name="RunManager" selected="Go Test.Test_renderComponents/test_3 in github.com/mayowa/xtemplate">
     <configuration name="Test_renderComponents/test_1 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
@@ -142,7 +141,7 @@
       <pattern value="^\QTest_renderComponents\E$/^\Qtest_1\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="Test_translateComponents/test_1 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_renderComponents/test_2 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -150,10 +149,10 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTest_translateComponents\E$/^\Qtest_1\E$" />
+      <pattern value="^\QTest_renderComponents\E$/^\Qtest_2\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="Test_translateComponents/test_2 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="Test_renderComponents/test_3 in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="xtemplate" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -161,7 +160,7 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTest_translateComponents\E$/^\Qtest_2\E$" />
+      <pattern value="^\QTest_renderComponents\E$/^\Qtest_3\E$" />
       <method v="2" />
     </configuration>
     <configuration name="Test_translateComponents/test_undefined_component in github.com/mayowa/xtemplate" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -187,11 +186,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.Test_renderComponents/test_3 in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.go test github.com/mayowa/xtemplate" />
+        <item itemvalue="Go Test.Test_renderComponents/test_2 in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_renderComponents/test_1 in github.com/mayowa/xtemplate" />
         <item itemvalue="Go Test.Test_translateComponents/test_undefined_component in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_translateComponents/test_2 in github.com/mayowa/xtemplate" />
-        <item itemvalue="Go Test.Test_translateComponents/test_1 in github.com/mayowa/xtemplate" />
       </list>
     </recent_temporary>
   </component>
@@ -246,7 +245,8 @@
     <MESSAGE value="SUpport &quot;.&quot; in file names, more tests" />
     <MESSAGE value="Test component rendering witn Render()" />
     <MESSAGE value="Make $props available inside default slot content" />
-    <option name="LAST_COMMIT_MESSAGE" value="Make $props available inside default slot content" />
+    <MESSAGE value="Modify New to accept xtemplate.Config as the sole parameter, modify tagRe to consider whitespace, fix tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="Modify New to accept xtemplate.Config as the sole parameter, modify tagRe to consider whitespace, fix tests" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -258,11 +258,6 @@
           <url>file://$PROJECT_DIR$/template.go</url>
           <line>257</line>
           <option name="timeStamp" value="50" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/component_test.go</url>
-          <line>238</line>
-          <option name="timeStamp" value="53" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/template_test.go</url>
@@ -281,7 +276,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/component_test.go</url>
-          <line>298</line>
+          <line>315</line>
           <option name="timeStamp" value="65" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
