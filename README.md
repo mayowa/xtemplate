@@ -149,9 +149,10 @@ Component templates are valid text/template file with special semantics
 </component>
 ```
 
-### The $props variable
+### Context and Attributes
 
-Additional attributes such as id|class|style are passed to the component template as attributes of te $props variable
+The context passed into a component is of type map[string]interface{} the parent context is stored in '
+ctx' (`.ctx.Name`) and component attributes such id|class|style are stored in 'props' (`.props.style`)
 
 ```html
 
@@ -162,7 +163,7 @@ Additional attributes such as id|class|style are passed to the component templat
 
 ```html
 
-<div class="box {{$props.class">
+<div class="box {{$.props.class}}">
   {{block "#slot--default" .}}
   default content
   {{end}}

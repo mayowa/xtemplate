@@ -137,21 +137,23 @@ func translateComponents(tpl *XTemplate, src Document) ([]byte, error) {
 			return src, err
 		}
 
-		argStr := "kwargs"
+		argStr := ""
 		for k, v := range tag.Attr {
 			if k == "type" {
 				continue
 			}
 			argStr += fmt.Sprintf(` "%s" "%s"`, k, v.Value)
 		}
-		if argStr == "kwargs" {
-			argStr += ` "_blank" ""`
+		if argStr != "" {
+			argStr = fmt.Sprintf("kwargs \"ctx\" . \"props\" (kwargs %s)", argStr)
+		} else {
+			argStr = "kwargs \"ctx\" ."
 		}
 
 		cBlock := Document{}
 		cBlock.AppendString(
-			fmt.Sprintf("{{- block \"component__%s__%d\" . -}}\n", tag.ID, cCount),
-			fmt.Sprintf("{{- $props := (%s) -}}\n", argStr),
+			fmt.Sprintf("{{- $__args := (%s) -}}\n", argStr),
+			fmt.Sprintf("{{- block \"component__%s__%d\" $__args -}}\n", tag.ID, cCount),
 		)
 
 		cBlock.Append(cTpl, []byte("\n{{end -}}"))
@@ -225,15 +227,7 @@ func swapContent(cBlock *Document, action *Action, tagID string, cCount int, slo
 
 	// replace body
 	if len(slotBody) > 0 {
-		if len(props) > 0 {
-			slotBody = fmt.Sprintf("\n{{- $props := (%s) -}}\n%s", props, slotBody)
-		}
 		newAction.Replace([]byte(action.Body), []byte(slotBody), 1)
-	} else {
-		if len(props) > 0 {
-			slotBody = fmt.Sprintf("\n{{- $props := (%s) -}}\n%s", props, action.Body)
-			newAction.Replace([]byte(action.Body), []byte(slotBody), 1)
-		}
 	}
 
 	// replace template action

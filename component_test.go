@@ -32,26 +32,20 @@ func Test_translateComponents(t *testing.T) {
 			`,
 			out: `        
         			<div>
-        				{{- block "component__card__1" . -}}
-        {{- $props := (kwargs "_blank" "") -}}
+        				{{- $__args := (kwargs "ctx" .) -}}
+        {{- block "component__card__1" $__args -}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
         		a header
         	{{end}}
         	</div>
         	<div class="card__body">
         	{{block "card__1__body" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
-        						{{- block "component__article__2" . -}}
-        {{- $props := (kwargs "_blank" "") -}}
+        						{{- $__args := (kwargs "ctx" .) -}}
+        {{- block "component__article__2" $__args -}}
         <div class="article">
         {{block "article__2__body" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
         							article
         							{{end}}
         </div>
@@ -79,42 +73,32 @@ func Test_translateComponents(t *testing.T) {
 			</component>
 		`,
 			out: `
-        			{{- block "component__card__1" . -}}
-        {{- $props := (kwargs "_blank" "") -}}
+        			{{- $__args := (kwargs "ctx" .) -}}
+        {{- block "component__card__1" $__args -}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__1__header" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
         		a header
         	{{end}}
         	</div>
         	<div class="card__body">
         	{{block "card__1__body" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
         					<aside>
         						a side menu
         					</aside>
-        					{{- block "component__article2__2" . -}}
-        {{- $props := (kwargs "_blank" "") -}}
-        {{- block "component__card__3" . -}}
-        {{- $props := (kwargs "_blank" "") -}}
+        					{{- $__args := (kwargs "ctx" .) -}}
+        {{- block "component__article2__2" $__args -}}
+        {{- $__args := (kwargs "ctx" .) -}}
+        {{- block "component__card__3" $__args -}}
         <div class="card">
         	<div class="card__header">
         	{{block "card__3__header" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
         		a header
         	{{end}}
         	</div>
         	<div class="card__body">
         	{{block "card__3__body" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
-        			{{block "article2__2__body" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-         lorem ipsum {{end}}
+        			{{block "article2__2__body" .}} lorem ipsum {{end}}
         		{{end}}
         	</div>
         </div> 
@@ -137,12 +121,10 @@ func Test_translateComponents(t *testing.T) {
 			</component>
 			`,
 			out: `
-        {{- block "component__box__1" . -}}
-        {{- $props := (kwargs "_blank" "") -}}
+        			{{- $__args := (kwargs "ctx" .) -}}
+        {{- block "component__box__1" $__args -}}
         <div class="box">
         	{{block "box__1__default" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
         				whats in a box?
         			{{end}}
         </div>
@@ -158,12 +140,10 @@ func Test_translateComponents(t *testing.T) {
 			</component>
 			`,
 			out: `
-      {{- block "component__box__1" . -}}
-        {{- $props := (kwargs "class" "red") -}}
+        			{{- $__args := (kwargs "ctx" . "props" (kwargs  "class" "red")) -}}
+        {{- block "component__box__1" $__args -}}
         <div class="box">
         	{{block "box__1__default" .}}
-        {{- $props := (kwargs "class" "red") -}}
-        
         				whats in a box?
         			{{end}}
         </div>
@@ -177,17 +157,15 @@ func Test_translateComponents(t *testing.T) {
 			<component type="colorbox" class="red"></component>
 			`,
 			out: `
-      {{- block "component__colorbox__1" . -}}
-        {{- $props := (kwargs "class" "red") -}}
+        			{{- $__args := (kwargs "ctx" . "props" (kwargs  "class" "red")) -}}
+        {{- block "component__colorbox__1" $__args -}}
         <div class="box">
         	{{block "colorbox__1__default" .}}
-        {{- $props := (kwargs "class" "red") -}}
-        
         		a {{$props.class}} box
         	{{end}}
         </div>
         
-      {{end -}}
+        {{end -}}
 			`,
 		},
 		{
@@ -203,26 +181,22 @@ func Test_translateComponents(t *testing.T) {
 			</component>			
 			`,
 			out: `
-        			{{- block "component__boxer__1" . -}}
-        {{- $props := (kwargs "class" "red") -}}
+        			{{- $__args := (kwargs "ctx" . "props" (kwargs  "class" "red")) -}}
+        {{- block "component__boxer__1" $__args -}}
         
         <div>
         	{{block "boxer__1__unknown" .}}
-        {{- $props := (kwargs "class" "red") -}}
-        
         		unknown component boxer
         	{{end}}
         </div>
         
         {{end -}}
         			
-        			{{- block "component__cards__2" . -}}
-        {{- $props := (kwargs "_blank" "") -}}
+        			{{- $__args := (kwargs "ctx" .) -}}
+        {{- block "component__cards__2" $__args -}}
         
         <div>
         	{{block "cards__2__unknown" .}}
-        {{- $props := (kwargs "_blank" "") -}}
-        
         		unknown component cards
         	{{end}}
         </div>
@@ -260,7 +234,7 @@ func Test_renderComponents(t *testing.T) {
 			name: "test 1",
 			src: `
 			<component type="boxext" class="red">
-				whats in a box {{$props.class}} {{.name}}?    
+				whats in a box {{$.props.class}} {{.ctx.name}}?    
 			</component>
 			`,
 			out: `
@@ -287,7 +261,7 @@ func Test_renderComponents(t *testing.T) {
 			name: "test 3",
 			src: `
 			<component type="attrbox" class="red" size="big">
-				whats in a box {{$props.class}} {{.name}}?    
+				whats in a box {{.props.class}} {{.ctx.name}}?    
 			</component>
 			`,
 			out: `

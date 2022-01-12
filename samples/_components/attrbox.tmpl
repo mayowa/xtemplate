@@ -1,6 +1,6 @@
 <div class="box">
-	<p>a {{$props.size}} {{$props.class}} box</p>
-	{{block "#slot--default" .}}
+	<p>a {{.props.size}} {{.props.class}} box</p>
+	{{block "#slot--default" . -}}
 		nada
 	{{end}}
 </div>
