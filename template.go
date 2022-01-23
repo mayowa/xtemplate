@@ -317,7 +317,7 @@ func getFilename(folder, name, ext string) (fileName string, tplName string) {
 
 	// remove file extension if one is provided
 	if strings.HasSuffix(name, "."+ext) {
-		name = strings.Replace(name, "."+ext, "", 1)
+		name = strings.TrimSuffix(name, "."+ext)
 	}
 
 	return fle, name
@@ -446,11 +446,12 @@ func (s *XTemplate) parsePartials(tpl *template.Template) error {
 
 		// log.Println(s.folder, name, info.Name(), strings.TrimPrefix(name, root))
 
-		tplName, _, content, err := s.readTemplate(strings.TrimPrefix(name, root))
+		_, _, content, err := s.readTemplate(strings.TrimPrefix(name, root))
 		if err != nil {
 			return err
 		}
 
+		tplName := strings.TrimSuffix(strings.TrimPrefix(name, s.partialsFolder+"/"), "."+s.ext)
 		_, err = tpl.New(tplName).Parse(string(content))
 		if err != nil {
 			return err

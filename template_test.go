@@ -255,7 +255,7 @@ func TestPartials(t *testing.T) {
 		expected string
 	}{
 		{name: "partials", tpl: "partials",
-			expected: "\n<div>label: dinma</div>\n\n\n<div>box: 18</div>\n\n"},
+			expected: "\n<div>label: dinma</div>\n\n\n<div>box: 18</div>\n\n<p>\n\tlorem is a nice girl e-ya, e-ya, o!\n</p>\n\n"},
 		{name: "sub/partials", tpl: "sub/partials",
 			expected: "\n<div>label: map[label:Email address name:email type:email]</div>\n\n\n<div>box: 18</div>\n\n"},
 		{name: "overlay4", tpl: "overlay4",
