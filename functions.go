@@ -192,7 +192,11 @@ func MixAsset(publicPath string) func(val string) string {
 }
 
 func NoCache(file string) string {
-	return fmt.Sprint(file, "?t=", time.Now().UnixNano())
+	qs := "?t="
+	if strings.Contains(file, "?") {
+		qs = "&t="
+	}
+	return fmt.Sprint(file, qs, time.Now().UnixNano())
 }
 
 // IsEmpty returns true if val is nil empty (nil or a zero value for its type)

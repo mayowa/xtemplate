@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="Change h">
+    <list default="true" id="74f2d720-5e56-425b-a9ca-f317ae1a6d66" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/samples/partials.html" beforeDir="false" afterPath="$PROJECT_DIR$/samples/partials.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/template.go" beforeDir="false" afterPath="$PROJECT_DIR$/template.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/template_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/template_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/functions.go" beforeDir="false" afterPath="$PROJECT_DIR$/functions.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -248,7 +246,8 @@
     <MESSAGE value="Make $props available inside default slot content" />
     <MESSAGE value="Modify New to accept xtemplate.Config as the sole parameter, modify tagRe to consider whitespace, fix tests" />
     <MESSAGE value="Change attrRe to support any attribute" />
-    <option name="LAST_COMMIT_MESSAGE" value="Change attrRe to support any attribute" />
+    <MESSAGE value="Fix bug in how partial templates are named" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix bug in how partial templates are named" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
